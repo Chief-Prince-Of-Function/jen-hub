@@ -203,6 +203,13 @@ async function renderIcsCalendar(url, host){
   try{
     const icsText = await fetchIcsText(url);
     const events = parseIcsEvents(icsText);
+    const text = await fetchIcsText(url);
+    const res = await fetch(url);
+    if(!res.ok){
+      throw new Error("Unable to load calendar feed.");
+    }
+    const text = await res.text();
+    const events = parseIcsEvents(text);
     const upcoming = filterUpcomingEvents(events).slice(0, 6);
 
     if(host.dataset.requestId !== requestId) return;
