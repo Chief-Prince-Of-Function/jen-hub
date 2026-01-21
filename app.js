@@ -8,6 +8,7 @@
 const LS_KEY = "sister_hub_local_v0";
 const HUB_API_URL = "https://jen-hub-api.fusco13pi.workers.dev";
 const SECRET_KEY  = "jen_hub_secret_v1";
+const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 const el = (id)=> document.getElementById(id);
 
@@ -167,6 +168,11 @@ function renderEmbed(url, host){
     return;
   }
 
+  if(looksLikeIcs(u)){
+    renderIcsCalendar(u, host);
+    return;
+  }
+
   // If it looks like an embed link, try iframe
   const looksEmbeddable = u.includes("calendar.google.com") || u.includes("embed");
   if(looksEmbeddable){
@@ -182,6 +188,174 @@ function renderEmbed(url, host){
       Open calendar link
     </a>`;
   }
+}
+
+function looksLikeIcs(url){
+  const clean = url.toLowerCase();
+  return clean.endsWith(".ics") || clean.includes("/ical") || clean.includes("icalendar");
+}
+
+async function renderIcsCalendar(url, host){
+  const requestId = String((Number(host.dataset.requestId) || 0) + 1);
+  host.dataset.requestId = requestId;
+  host.innerHTML = "Loading calendar…";
+
+  try{
+    const icsText = await fetchIcsText(url);
+    const events = parseIcsEvents(icsText);
+    const upcoming = filterUpcomingEvents(events).slice(0, 6);
+
+    if(host.dataset.requestId !== requestId) return;
+
+    if(upcoming.length === 0){
+      host.innerHTML = "No upcoming events found.";
+      return;
+    }
+
+    host.innerHTML = `
+      <div class="calendarList">
+        ${upcoming.map((event)=>{
+          const dateText = formatEventDate(event);
+          return `
+            <div class="calendarItem">
+              <div class="calendarItemTitle">${escapeHtml(event.summary || "(No title)")}</div>
+              <div class="calendarItemMeta">${escapeHtml(dateText)}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }catch(err){
+    if(host.dataset.requestId !== requestId) return;
+    host.innerHTML = `<span class="muted">Unable to load calendar feed. ${escapeHtml(err?.message || err)}</span>`;
+  }
+}
+
+async function fetchIcsText(url){
+  const direct = await tryFetchText(url);
+  if(direct.ok) return direct.text;
+
+  const proxied = await tryFetchText(`${ICS_PROXY_URL}${encodeURIComponent(url)}`);
+  if(proxied.ok) return proxied.text;
+
+  throw new Error(direct.error || proxied.error || "Unable to load calendar feed.");
+}
+
+async function tryFetchText(url){
+  try{
+    const res = await fetch(url);
+    if(!res.ok){
+      return { ok: false, error: `Unable to load calendar feed (${res.status}).` };
+    }
+    return { ok: true, text: await res.text() };
+  }catch(err){
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+function parseIcsEvents(text){
+  const lines = text
+    .split(/\r?\n/)
+    .reduce((acc, line)=>{
+      if(line.startsWith(" ") || line.startsWith("\t")){
+        acc[acc.length - 1] += line.trim();
+      }else{
+        acc.push(line.trim());
+      }
+      return acc;
+    }, []);
+
+  const events = [];
+  let current = null;
+
+  lines.forEach((line)=>{
+    if(line === "BEGIN:VEVENT"){
+      current = { summary: "" };
+      return;
+    }
+    if(line === "END:VEVENT"){
+      if(current){
+        events.push(current);
+      }
+      current = null;
+      return;
+    }
+    if(!current) return;
+
+    const [rawKey, ...rest] = line.split(":");
+    if(!rawKey || rest.length === 0) return;
+    const value = rest.join(":");
+    const key = rawKey.toUpperCase();
+
+    if(key.startsWith("SUMMARY")){
+      current.summary = value;
+    }
+    if(key.startsWith("DTSTART")){
+      current.start = parseIcsDate(value);
+      current.allDay = value.length === 8;
+    }
+    if(key.startsWith("DTEND")){
+      current.end = parseIcsDate(value);
+    }
+  });
+
+  return events.filter((event)=> event.start instanceof Date && !Number.isNaN(event.start.getTime()));
+}
+
+function parseIcsDate(value){
+  if(!value) return null;
+  const clean = value.replace("Z", "");
+  const isUtc = value.endsWith("Z");
+
+  if(clean.length === 8){
+    const year = Number(clean.slice(0, 4));
+    const month = Number(clean.slice(4, 6)) - 1;
+    const day = Number(clean.slice(6, 8));
+    return new Date(year, month, day);
+  }
+
+  if(clean.length >= 15){
+    const year = Number(clean.slice(0, 4));
+    const month = Number(clean.slice(4, 6)) - 1;
+    const day = Number(clean.slice(6, 8));
+    const hour = Number(clean.slice(9, 11));
+    const minute = Number(clean.slice(11, 13));
+    const second = Number(clean.slice(13, 15));
+    if(isUtc){
+      return new Date(Date.UTC(year, month, day, hour, minute, second));
+    }
+    return new Date(year, month, day, hour, minute, second);
+  }
+
+  return null;
+}
+
+function filterUpcomingEvents(events){
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return events
+    .filter((event)=>{
+      if(!event.start) return false;
+      if(event.end && event.end >= startOfToday) return true;
+      return event.start >= startOfToday;
+    })
+    .sort((a, b)=> a.start - b.start);
+}
+
+function formatEventDate(event){
+  if(!event.start) return "";
+  if(event.allDay){
+    return event.start.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  }
+
+  return event.start.toLocaleString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function todoRow(t){
