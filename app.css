@@ -345,7 +345,15 @@ body{
     grid-template-columns: 1fr;
   }
   .span2{ grid-column: auto; }
-  .col{ gap: 12px; }
+  .col{
+    display: contents;
+  }
+  .card--weather{ order: 1; }
+  .card--todo{ order: 2; }
+  .card--work-cal{ order: 3; }
+  .card--home-cal{ order: 4; }
+  .card--mantra{ order: 5; }
+  .card--verse{ order: 6; }
   .twoCol{ grid-template-columns: 1fr; }
   .todoAddControls{ grid-template-columns: 1fr; }
   .topCard{ flex-direction:column; align-items:flex-start; }

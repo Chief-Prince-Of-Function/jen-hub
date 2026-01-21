@@ -30,7 +30,7 @@
     <!-- Grid -->
     <section class="grid">
       <!-- Top full-span weather card -->
-      <section class="card span2">
+      <section class="card span2 card--weather">
         <h2 class="cardTitle">Local weather:</h2>
 
         <div class="twoCol">
@@ -68,21 +68,21 @@
 
       <div class="col">
         <!-- Left column: Home calendar -->
-        <section class="card">
+        <section class="card card--home-cal">
           <h2 class="cardTitle">Home calendar:</h2>
           <input id="homeCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
           <p class="hint">Some sites block embedding; if so, it will show a link instead.</p>
           <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
         </section>
 
-        <section class="card">
+        <section class="card card--mantra">
           <h2 class="cardTitle">Daily mantra:</h2>
           <input id="mantra" class="input" placeholder="Type your mantra..." />
           <p class="hint">This updates the message in the header.</p>
         </section>
 
         <!-- Left column: Verse -->
-        <section class="card">
+        <section class="card card--verse">
           <h2 class="cardTitle">Bible Verse Of The Day:</h2>
 
           <div class="btnRow">
@@ -102,7 +102,7 @@
 
       <div class="col">
         <!-- Right column: Todos -->
-        <section class="card">
+        <section class="card card--todo">
           <h2 class="cardTitle">Work To Do List:</h2>
 
           <div class="todoAdd">
@@ -128,7 +128,7 @@
         </section>
 
         <!-- Right column: Work calendar -->
-        <section class="card">
+        <section class="card card--work-cal">
           <h2 class="cardTitle">Work calendar:</h2>
           <input id="workCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
           <p class="hint">If embed is blocked, it will show a link instead.</p>
