@@ -42,13 +42,7 @@
             <div class="row2">
               <input id="weatherLabel" class="input" placeholder="Home" />
               <input id="weatherZip" class="input" placeholder="ZIP" inputmode="numeric" />
-              <input id="weatherLat" class="input" placeholder="Latitude" />
-              <input id="weatherLon" class="input" placeholder="Longitude" />
             </div>
-
-            <p class="hint">
-              Tip: Use ZIP or lat/lon (you can set lat/lon later).
-            </p>
 
             <div class="btnRow">
               <button id="btnWeatherRefresh" class="btn">Refresh weather</button>
@@ -71,12 +65,8 @@
         <!-- Left column: Home calendar -->
         <section class="card card--home-cal">
           <h2 class="cardTitle">Home calendar:</h2>
-          <div class="inputRow">
-            <input id="homeCal" class="input" placeholder="Home calendar auto-loaded" />
-            <button id="homeCalToggle" class="btn btnSmall" type="button">Edit</button>
-          </div>
-          <p class="hint">Works with Google embeds or public .ics feeds. Some sites block embedding; then we show a link.</p>
-          <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+          <input id="homeCal" class="input" placeholder="Home calendar auto-loaded" readonly />
+          <div id="homeCalPreview" class="embedBox">Home calendar auto-loaded.</div>
         </section>
 
         <section class="card card--mantra">
