@@ -286,6 +286,25 @@ body{
   gap:10px;
 }
 
+.todoListHeader{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.todoListHeader .input{
+  min-width: 180px;
+  flex: 1 1 200px;
+}
+
+.todoListActions{
+  display:flex;
+  gap:10px;
+  flex-wrap: wrap;
+}
+
 .todoList{
   display:flex;
   flex-direction:column;
@@ -385,8 +404,9 @@ body{
   .card--todo{ order: 2; }
   .card--work-cal{ order: 3; }
   .card--home-cal{ order: 4; }
-  .card--mantra{ order: 5; }
-  .card--verse{ order: 6; }
+  .card--home-todo{ order: 5; }
+  .card--mantra{ order: 6; }
+  .card--verse{ order: 7; }
   .twoCol{ grid-template-columns: 1fr; }
   .todoAddControls{ grid-template-columns: 1fr; }
   .topCard{ flex-direction:column; align-items:flex-start; }

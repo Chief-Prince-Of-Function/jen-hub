@@ -18,7 +18,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 3;
+const CURRENT_SCHEMA = 4;
 
 const el = (id)=> document.getElementById(id);
 
@@ -101,6 +101,13 @@ const todoPriority = el("todoPriority");
 const todoAddBtn = el("todoAddBtn");
 const todoList = el("todoList");
 
+const homeTodoListSelect = el("homeTodoListSelect");
+const homeTodoListCreate = el("homeTodoListCreate");
+const homeTodoListDelete = el("homeTodoListDelete");
+const homeTodoText = el("homeTodoText");
+const homeTodoAddBtn = el("homeTodoAddBtn");
+const homeTodoList = el("homeTodoList");
+
 const btnSave = el("btnSave");
 const btnReset = el("btnReset");
 const saveStatus = el("saveStatus");
@@ -161,6 +168,7 @@ function render(){
 
   todoList.innerHTML = "";
   (state.todos.work || []).forEach((t)=> todoList.appendChild(todoRow(t)));
+  renderHomeTodos();
 
   savedLine.textContent = state.meta.updatedAt
     ? `Saved: ${new Date(state.meta.updatedAt).toLocaleString()}`
@@ -448,6 +456,51 @@ function todoRow(t){
   return row;
 }
 
+function homeTodoRow(t){
+  const row = document.createElement("div");
+  row.className = "todoItem";
+
+  const left = document.createElement("div");
+  left.className = "todoLeft";
+
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.className = "todoCheck";
+  check.checked = !!t.done;
+  check.addEventListener("change", ()=> {
+    t.done = check.checked;
+    autoSave();
+    render();
+  });
+
+  const textWrap = document.createElement("div");
+  const title = document.createElement("div");
+  title.className = "todoText";
+  title.textContent = t.text || "(blank)";
+  textWrap.appendChild(title);
+
+  left.appendChild(check);
+  left.appendChild(textWrap);
+
+  const actions = document.createElement("div");
+  actions.className = "todoActions";
+
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn btnSmall btnDanger";
+  del.textContent = "Delete";
+  del.addEventListener("click", ()=> {
+    deleteHomeTodo(t.id);
+  });
+
+  actions.appendChild(del);
+
+  row.appendChild(left);
+  row.appendChild(actions);
+
+  return row;
+}
+
 /* =========================
    Events
 ========================= */
@@ -477,6 +530,20 @@ workCal.addEventListener("input", ()=>{
 todoAddBtn.addEventListener("click", addTodo);
 todoText.addEventListener("keydown", (e)=>{
   if(e.key === "Enter") addTodo();
+});
+
+homeTodoListSelect.addEventListener("change", ()=>{
+  const homeTodos = ensureHomeTodoState();
+  homeTodos.selectedListId = homeTodoListSelect.value;
+  autoSave();
+  render();
+});
+
+homeTodoListCreate.addEventListener("click", createHomeTodoList);
+homeTodoListDelete.addEventListener("click", deleteSelectedHomeTodoList);
+homeTodoAddBtn.addEventListener("click", addHomeTodo);
+homeTodoText.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") addHomeTodo();
 });
 
 btnSave.addEventListener("click", async ()=>{
@@ -585,6 +652,148 @@ function deleteTodo(id){
   render();
 }
 
+function renderHomeTodos(){
+  const homeTodos = ensureHomeTodoState();
+  const lists = homeTodos.lists || [];
+  if(lists.length === 0){
+    homeTodoListSelect.innerHTML = "";
+    homeTodoList.innerHTML = `<div class="muted">No lists yet. Create one above.</div>`;
+    return;
+  }
+
+  if(!lists.find((list)=> list.id === homeTodos.selectedListId)){
+    homeTodos.selectedListId = lists[0].id;
+  }
+
+  homeTodoListSelect.innerHTML = "";
+  lists.forEach((list)=>{
+    const option = document.createElement("option");
+    option.value = list.id;
+    option.textContent = list.name;
+    if(list.id === homeTodos.selectedListId) option.selected = true;
+    homeTodoListSelect.appendChild(option);
+  });
+
+  const activeList = getSelectedHomeTodoList();
+  homeTodoList.innerHTML = "";
+  if(activeList){
+    (activeList.items || []).forEach((item)=> {
+      homeTodoList.appendChild(homeTodoRow(item));
+    });
+  }
+}
+
+function addHomeTodo(){
+  const txt = (homeTodoText.value || "").trim();
+  if(!txt) return;
+  const activeList = getSelectedHomeTodoList();
+  if(!activeList) return;
+
+  activeList.items = activeList.items || [];
+  activeList.items.unshift({
+    id: crypto.randomUUID(),
+    text: txt,
+    done: false,
+    createdAt: new Date().toISOString(),
+  });
+
+  homeTodoText.value = "";
+  autoSave();
+  render();
+}
+
+function deleteHomeTodo(id){
+  const activeList = getSelectedHomeTodoList();
+  if(!activeList) return;
+  activeList.items = (activeList.items || []).filter((item)=> item.id !== id);
+  autoSave();
+  render();
+}
+
+function createHomeTodoList(){
+  const name = (window.prompt("Name the new list:") || "").trim();
+  if(!name) return;
+
+  const homeTodos = ensureHomeTodoState();
+  const newList = {
+    id: crypto.randomUUID(),
+    name,
+    items: [],
+  };
+
+  homeTodos.lists.push(newList);
+  homeTodos.selectedListId = newList.id;
+  autoSave();
+  render();
+}
+
+function deleteSelectedHomeTodoList(){
+  const homeTodos = ensureHomeTodoState();
+  const activeList = getSelectedHomeTodoList();
+  if(!activeList) return;
+  if(homeTodos.lists.length <= 1){
+    window.alert("Keep at least one list.");
+    return;
+  }
+  const confirmDelete = window.confirm(`Delete the "${activeList.name}" list?`);
+  if(!confirmDelete) return;
+
+  homeTodos.lists = homeTodos.lists.filter((list)=> list.id !== activeList.id);
+  homeTodos.selectedListId = homeTodos.lists[0]?.id || "";
+  autoSave();
+  render();
+}
+
+function getSelectedHomeTodoList(){
+  const homeTodos = ensureHomeTodoState();
+  return (homeTodos.lists || []).find((list)=> list.id === homeTodos.selectedListId);
+}
+
+function ensureHomeTodoState(){
+  if(!state.todos) state.todos = { work: [], home: [] };
+  if(!state.todos.home || Array.isArray(state.todos.home)){
+    state.todos.home = normalizeHomeTodoState(state.todos.home);
+  }
+  state.todos.home.lists = state.todos.home.lists || [];
+  if(!state.todos.home.selectedListId && state.todos.home.lists.length){
+    state.todos.home.selectedListId = state.todos.home.lists[0].id;
+  }
+  return state.todos.home;
+}
+
+function normalizeHomeTodoState(raw){
+  if(raw && !Array.isArray(raw) && Array.isArray(raw.lists)){
+    return {
+      lists: raw.lists.map((list)=> ({
+        id: list.id || crypto.randomUUID(),
+        name: list.name || "Untitled",
+        items: Array.isArray(list.items) ? list.items : [],
+      })),
+      selectedListId: raw.selectedListId || raw.lists?.[0]?.id || "",
+    };
+  }
+
+  const defaultLists = ["Home To Do", "Groceries"].map((name)=> ({
+    id: crypto.randomUUID(),
+    name,
+    items: [],
+  }));
+
+  if(Array.isArray(raw) && raw.length){
+    defaultLists[0].items = raw.map((item)=> ({
+      id: item.id || crypto.randomUUID(),
+      text: item.text || "(blank)",
+      done: !!item.done,
+      createdAt: item.createdAt || new Date().toISOString(),
+    }));
+  }
+
+  return {
+    lists: defaultLists,
+    selectedListId: defaultLists[0]?.id || "",
+  };
+}
+
 function setSaveStatus(txt){
   saveStatus.textContent = txt;
   state.meta.updatedAt = new Date().toISOString();
@@ -620,18 +829,28 @@ function migrateState(baseState){
     delete stateToMigrate.calendars.homeEmbedUrl;
   }
 
+  if(schema < 4){
+    stateToMigrate.todos = stateToMigrate.todos || { work: [], home: [] };
+    stateToMigrate.todos.home = normalizeHomeTodoState(stateToMigrate.todos.home);
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
 
 function defaultState(){
   const now = new Date().toISOString();
+  const homeLists = ["Home To Do", "Groceries"].map((name)=> ({
+    id: crypto.randomUUID(),
+    name,
+    items: [],
+  }));
   return {
     meta: { createdAt: now, updatedAt: now, schema: CURRENT_SCHEMA },
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"" },
     calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
-    todos: { work: [], home: [] },
+    todos: { work: [], home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" } },
     notes: { mantra: "Live And Not Just Survive" }
   };
 }

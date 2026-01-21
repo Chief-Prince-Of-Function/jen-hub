@@ -67,6 +67,27 @@
           <div id="homeCalPreview" class="embedBox">Home calendar auto-loaded.</div>
         </section>
 
+        <section class="card card--home-todo">
+          <h2 class="cardTitle">Home To Do List:</h2>
+
+          <div class="todoListHeader">
+            <select id="homeTodoListSelect" class="input select"></select>
+            <div class="todoListActions">
+              <button id="homeTodoListCreate" class="btn">Create list</button>
+              <button id="homeTodoListDelete" class="btn btnDanger">Delete list</button>
+            </div>
+          </div>
+
+          <div class="todoAdd">
+            <input id="homeTodoText" class="input todoAddText" placeholder="Add a task..." />
+            <div class="btnRow">
+              <button id="homeTodoAddBtn" class="btn">Add</button>
+            </div>
+          </div>
+
+          <div id="homeTodoList" class="todoList"></div>
+        </section>
+
         <section class="card card--mantra">
           <h2 class="cardTitle">Daily mantra:</h2>
           <input id="mantra" class="input" placeholder="Type your mantra..." />
