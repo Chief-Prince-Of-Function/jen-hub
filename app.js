@@ -14,6 +14,8 @@ const ICS_PROXY_URLS = [
   "https://thingproxy.freeboard.io/fetch/",
 ];
 const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
+const DEFAULT_HOME_CAL_URL = "https://rest.cozi.com/api/ext/1103/8df50700-4210-4b27-9d16-bacc9b9468a7/icalendar/feed/feed.ics";
+const CURRENT_SCHEMA = 2;
 
 const el = (id)=> document.getElementById(id);
 
@@ -91,6 +93,7 @@ const workCalPreview = el("workCalPreview");
 
 const homeCal = el("homeCal");
 const homeCalPreview = el("homeCalPreview");
+const homeCalToggle = el("homeCalToggle");
 
 const todoText = el("todoText");
 const todoDueDate = el("todoDueDate");
@@ -106,18 +109,19 @@ const saveStatus = el("saveStatus");
    State + boot
 ========================= */
 let state = defaultState();
+let homeCalRevealed = false;
 
 (async function boot(){
   try{
     const remote = await loadRemote();
-    state = remote && typeof remote === "object" ? remote : defaultState();
+    state = remote && typeof remote === "object" ? migrateState(remote) : defaultState();
 
     // keep a local backup mirror (helpful if cloud ever fails)
     try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(_){}
 
     setSaveStatus("Loaded ✅ (cloud)");
   }catch(err){
-    state = loadLocal() || defaultState();
+    state = migrateState(loadLocal()) || defaultState();
     setSaveStatus("Loaded ⚠️ (local) — " + (err?.message || err));
   }
   render();
@@ -147,10 +151,18 @@ function render(){
   mantraBig.textContent = (state.notes.mantra || "Live And Not Just Survive").trim() || "Live And Not Just Survive";
 
   workCal.value = state.calendars.workEmbedUrl || "";
-  homeCal.value = state.calendars.homeEmbedUrl || "";
+  if(homeCalRevealed){
+    homeCal.value = state.calendars.homeEmbedUrl || "";
+    homeCal.placeholder = "Paste an embed URL or .ics feed URL";
+  }else{
+    homeCal.value = "";
+    homeCal.placeholder = "Home calendar auto-loaded";
+  }
+  homeCalToggle.textContent = homeCalRevealed ? "Hide" : "Edit";
+  homeCalToggle.setAttribute("aria-pressed", homeCalRevealed ? "true" : "false");
 
   renderEmbed(workCal.value, workCalPreview);
-  renderEmbed(homeCal.value, homeCalPreview);
+  renderEmbed(state.calendars.homeEmbedUrl, homeCalPreview);
 
   verseOut.textContent = state.verse.lastText
     ? `${state.verse.lastText}\n\n— ${state.verse.lastRef || ""}\n\nCached: ${state.verse.cachedAt || ""}`
@@ -471,6 +483,14 @@ homeCal.addEventListener("input", ()=>{
   autoSave();
 });
 
+homeCalToggle.addEventListener("click", ()=>{
+  homeCalRevealed = !homeCalRevealed;
+  render();
+  if(homeCalRevealed){
+    homeCal.focus();
+  }
+});
+
 todoAddBtn.addEventListener("click", addTodo);
 todoText.addEventListener("keydown", (e)=>{
   if(e.key === "Enter") addTodo();
@@ -597,12 +617,30 @@ function loadLocal(){
   }
 }
 
+function migrateState(baseState){
+  if(!baseState || typeof baseState !== "object") return baseState;
+
+  const stateToMigrate = { ...baseState };
+  const meta = stateToMigrate.meta || {};
+  const schema = Number(meta.schema || 1);
+
+  if(schema < 2){
+    stateToMigrate.calendars = stateToMigrate.calendars || {};
+    if(!stateToMigrate.calendars.homeEmbedUrl){
+      stateToMigrate.calendars.homeEmbedUrl = DEFAULT_HOME_CAL_URL;
+    }
+  }
+
+  stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
+  return stateToMigrate;
+}
+
 function defaultState(){
   const now = new Date().toISOString();
   return {
-    meta: { createdAt: now, updatedAt: now, schema: 1 },
+    meta: { createdAt: now, updatedAt: now, schema: CURRENT_SCHEMA },
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"" },
-    calendars: { workEmbedUrl:"", homeEmbedUrl:"" },
+    calendars: { workEmbedUrl:"", homeEmbedUrl: DEFAULT_HOME_CAL_URL },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
     todos: { work: [], home: [] },
     notes: { mantra: "Live And Not Just Survive" }

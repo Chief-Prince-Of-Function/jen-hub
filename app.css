@@ -147,6 +147,12 @@ body{
   gap:10px;
 }
 
+.inputRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
 .input{
   width:100%;
   padding: 10px 12px;
