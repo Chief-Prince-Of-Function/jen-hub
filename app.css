@@ -339,13 +339,18 @@ body{
   letter-spacing: .2px;
 }
 
-.todoText[contenteditable="true"]{
-  cursor: text;
+.todoTextInput{
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
   outline: 2px dashed transparent;
   outline-offset: 3px;
 }
 
-.todoText[contenteditable="true"]:focus{
+.todoTextInput:focus{
   outline-color: rgba(255,255,255,.35);
 }
 

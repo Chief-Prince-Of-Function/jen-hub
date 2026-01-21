@@ -411,9 +411,7 @@ function todoRow(t){
 
   const textWrap = document.createElement("div");
 
-  const title = document.createElement("div");
-  title.className = "todoText";
-  makeTodoTextEditable(title, t, {
+  const title = createTodoTextInput(t, {
     label: "Work to do item",
     onUpdate: ()=> {
       autoSave();
@@ -480,9 +478,7 @@ function homeTodoRow(t){
   });
 
   const textWrap = document.createElement("div");
-  const title = document.createElement("div");
-  title.className = "todoText";
-  makeTodoTextEditable(title, t, {
+  const title = createTodoTextInput(t, {
     label: "Home to do item",
     onUpdate: ()=> {
       autoSave();
@@ -885,40 +881,38 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
-function makeTodoTextEditable(titleEl, todo, options = {}){
-  const displayText = ()=> ((todo.text || "").trim() ? todo.text : "(blank)");
-  titleEl.setAttribute("contenteditable", "true");
-  titleEl.setAttribute("role", "textbox");
-  titleEl.setAttribute("aria-label", options.label || "Todo item");
-  titleEl.spellcheck = true;
-  titleEl.textContent = displayText();
+function createTodoTextInput(todo, options = {}){
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "todoText todoTextInput";
+  input.value = todo.text || "";
+  input.placeholder = "(blank)";
+  input.setAttribute("aria-label", options.label || "Todo item");
+  input.spellcheck = true;
 
-  titleEl.addEventListener("focus", ()=> {
-    if(!(todo.text || "").trim()){
-      titleEl.textContent = "";
-    }
-  });
-
-  titleEl.addEventListener("blur", ()=> {
-    const next = titleEl.textContent.replace(/\s+/g, " ").trim();
+  const commit = ()=>{
+    const next = input.value.replace(/\s+/g, " ").trim();
     todo.text = next;
-    titleEl.textContent = next || "(blank)";
+    input.value = next;
     if(typeof options.onUpdate === "function"){
       options.onUpdate();
     }
-  });
+  };
 
-  titleEl.addEventListener("keydown", (event)=> {
+  input.addEventListener("blur", commit);
+  input.addEventListener("keydown", (event)=> {
     if(event.key === "Enter"){
       event.preventDefault();
-      titleEl.blur();
+      input.blur();
     }
     if(event.key === "Escape"){
       event.preventDefault();
-      titleEl.textContent = displayText();
-      titleEl.blur();
+      input.value = todo.text || "";
+      input.blur();
     }
   });
+
+  return input;
 }
 
 function getIcsProxyOrigin(){
