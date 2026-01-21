@@ -18,7 +18,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 4;
+const CURRENT_SCHEMA = 5;
 
 const el = (id)=> document.getElementById(id);
 
@@ -99,6 +99,7 @@ const todoText = el("todoText");
 const todoDueDate = el("todoDueDate");
 const todoPriority = el("todoPriority");
 const todoAddBtn = el("todoAddBtn");
+const todoSort = el("todoSort");
 const todoList = el("todoList");
 
 const homeTodoListSelect = el("homeTodoListSelect");
@@ -166,8 +167,14 @@ function render(){
 
   weatherOut.textContent = state.weather.lastText || "Not loaded yet.";
 
+  todoSort.value = state.todos.workSort || "manual";
   todoList.innerHTML = "";
-  (state.todos.work || []).forEach((t)=> todoList.appendChild(todoRow(t)));
+  const workTodos = getWorkTodosForDisplay();
+  workTodos.forEach((t, index)=> todoList.appendChild(todoRow(t, {
+    index,
+    total: workTodos.length,
+    sortMode: state.todos.workSort || "manual",
+  })));
   renderHomeTodos();
 
   savedLine.textContent = state.meta.updatedAt
@@ -392,9 +399,11 @@ function formatEventDate(event){
   });
 }
 
-function todoRow(t){
+function todoRow(t, options = {}){
   const row = document.createElement("div");
   row.className = "todoItem";
+  const itemIndex = Number.isFinite(options.index) ? options.index : 0;
+  const itemTotal = Number.isFinite(options.total) ? options.total : 0;
 
   const left = document.createElement("div");
   left.className = "todoLeft";
@@ -410,6 +419,7 @@ function todoRow(t){
   });
 
   const textWrap = document.createElement("div");
+  textWrap.className = "todoTextWrap";
 
   const title = createTodoTextInput(t, {
     label: "Work to do item",
@@ -443,15 +453,44 @@ function todoRow(t){
   tag.className = `tag ${t.priority || "med"}`;
   tag.textContent = `Priority: ${cap(t.priority || "med")}`;
 
+  const moveWrap = document.createElement("div");
+  moveWrap.className = "todoMove";
+
+  const canMove = (options.sortMode || "manual") === "manual";
+  const moveUp = document.createElement("button");
+  moveUp.type = "button";
+  moveUp.className = "btn btnSmall btnIcon";
+  moveUp.setAttribute("aria-label", "Move item up");
+  moveUp.textContent = "↑";
+  moveUp.disabled = !canMove || itemIndex <= 0;
+  moveUp.addEventListener("click", ()=> {
+    moveWorkTodo(t.id, -1);
+  });
+
+  const moveDown = document.createElement("button");
+  moveDown.type = "button";
+  moveDown.className = "btn btnSmall btnIcon";
+  moveDown.setAttribute("aria-label", "Move item down");
+  moveDown.textContent = "↓";
+  moveDown.disabled = !canMove || itemIndex >= (itemTotal - 1);
+  moveDown.addEventListener("click", ()=> {
+    moveWorkTodo(t.id, 1);
+  });
+
+  moveWrap.appendChild(moveUp);
+  moveWrap.appendChild(moveDown);
+
   const del = document.createElement("button");
   del.type = "button";
-  del.className = "btn btnSmall btnDanger";
-  del.textContent = "Delete";
+  del.className = "btn btnSmall btnIcon btnDanger";
+  del.setAttribute("aria-label", "Delete item");
+  del.textContent = "×";
   del.addEventListener("click", ()=>{
     deleteTodo(t.id);
   });
 
   actions.appendChild(tag);
+  actions.appendChild(moveWrap);
   actions.appendChild(del);
 
   row.appendChild(left);
@@ -460,9 +499,11 @@ function todoRow(t){
   return row;
 }
 
-function homeTodoRow(t){
+function homeTodoRow(t, options = {}){
   const row = document.createElement("div");
   row.className = "todoItem";
+  const itemIndex = Number.isFinite(options.index) ? options.index : 0;
+  const itemTotal = Number.isFinite(options.total) ? options.total : 0;
 
   const left = document.createElement("div");
   left.className = "todoLeft";
@@ -478,6 +519,7 @@ function homeTodoRow(t){
   });
 
   const textWrap = document.createElement("div");
+  textWrap.className = "todoTextWrap";
   const title = createTodoTextInput(t, {
     label: "Home to do item",
     onUpdate: ()=> {
@@ -493,14 +535,42 @@ function homeTodoRow(t){
   const actions = document.createElement("div");
   actions.className = "todoActions";
 
+  const moveWrap = document.createElement("div");
+  moveWrap.className = "todoMove";
+
+  const moveUp = document.createElement("button");
+  moveUp.type = "button";
+  moveUp.className = "btn btnSmall btnIcon";
+  moveUp.setAttribute("aria-label", "Move item up");
+  moveUp.textContent = "↑";
+  moveUp.disabled = itemIndex <= 0;
+  moveUp.addEventListener("click", ()=> {
+    moveHomeTodo(t.id, -1);
+  });
+
+  const moveDown = document.createElement("button");
+  moveDown.type = "button";
+  moveDown.className = "btn btnSmall btnIcon";
+  moveDown.setAttribute("aria-label", "Move item down");
+  moveDown.textContent = "↓";
+  moveDown.disabled = itemIndex >= (itemTotal - 1);
+  moveDown.addEventListener("click", ()=> {
+    moveHomeTodo(t.id, 1);
+  });
+
+  moveWrap.appendChild(moveUp);
+  moveWrap.appendChild(moveDown);
+
   const del = document.createElement("button");
   del.type = "button";
-  del.className = "btn btnSmall btnDanger";
-  del.textContent = "Delete";
+  del.className = "btn btnSmall btnIcon btnDanger";
+  del.setAttribute("aria-label", "Delete item");
+  del.textContent = "×";
   del.addEventListener("click", ()=> {
     deleteHomeTodo(t.id);
   });
 
+  actions.appendChild(moveWrap);
   actions.appendChild(del);
 
   row.appendChild(left);
@@ -538,6 +608,12 @@ workCal.addEventListener("input", ()=>{
 todoAddBtn.addEventListener("click", addTodo);
 todoText.addEventListener("keydown", (e)=>{
   if(e.key === "Enter") addTodo();
+});
+
+todoSort.addEventListener("change", ()=> {
+  state.todos.workSort = todoSort.value;
+  autoSave();
+  render();
 });
 
 homeTodoListSelect.addEventListener("change", ()=>{
@@ -660,6 +736,32 @@ function deleteTodo(id){
   render();
 }
 
+function moveWorkTodo(id, direction){
+  const workTodos = state.todos.work || [];
+  const index = workTodos.findIndex((t)=> t.id === id);
+  if(index < 0) return;
+  const nextIndex = index + direction;
+  if(nextIndex < 0 || nextIndex >= workTodos.length) return;
+  const [item] = workTodos.splice(index, 1);
+  workTodos.splice(nextIndex, 0, item);
+  autoSave();
+  render();
+}
+
+function moveHomeTodo(id, direction){
+  const activeList = getSelectedHomeTodoList();
+  if(!activeList) return;
+  const items = activeList.items || [];
+  const index = items.findIndex((item)=> item.id === id);
+  if(index < 0) return;
+  const nextIndex = index + direction;
+  if(nextIndex < 0 || nextIndex >= items.length) return;
+  const [item] = items.splice(index, 1);
+  items.splice(nextIndex, 0, item);
+  autoSave();
+  render();
+}
+
 function renderHomeTodos(){
   const homeTodos = ensureHomeTodoState();
   const lists = homeTodos.lists || [];
@@ -685,10 +787,25 @@ function renderHomeTodos(){
   const activeList = getSelectedHomeTodoList();
   homeTodoList.innerHTML = "";
   if(activeList){
-    (activeList.items || []).forEach((item)=> {
-      homeTodoList.appendChild(homeTodoRow(item));
+    (activeList.items || []).forEach((item, index)=> {
+      homeTodoList.appendChild(homeTodoRow(item, {
+        index,
+        total: activeList.items.length,
+      }));
     });
   }
+}
+
+function getWorkTodosForDisplay(){
+  const workTodos = state.todos.work || [];
+  const mode = state.todos.workSort || "manual";
+  if(mode !== "priority") return workTodos;
+  const priorityRank = { high: 0, med: 1, low: 2 };
+  return [...workTodos].sort((a, b)=> {
+    const rankDiff = (priorityRank[a.priority || "med"] ?? 1) - (priorityRank[b.priority || "med"] ?? 1);
+    if(rankDiff !== 0) return rankDiff;
+    return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+  });
 }
 
 function addHomeTodo(){
@@ -842,6 +959,11 @@ function migrateState(baseState){
     stateToMigrate.todos.home = normalizeHomeTodoState(stateToMigrate.todos.home);
   }
 
+  if(schema < 5){
+    stateToMigrate.todos = stateToMigrate.todos || { work: [], home: [] };
+    stateToMigrate.todos.workSort = stateToMigrate.todos.workSort || "manual";
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -858,7 +980,7 @@ function defaultState(){
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"" },
     calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
-    todos: { work: [], home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" } },
+    todos: { work: [], workSort: "manual", home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" } },
     notes: { mantra: "Live And Not Just Survive" }
   };
 }
@@ -882,23 +1004,32 @@ function escapeHtml(str){
 }
 
 function createTodoTextInput(todo, options = {}){
-  const input = document.createElement("input");
-  input.type = "text";
+  const input = document.createElement("textarea");
+  input.rows = 1;
   input.className = "todoText todoTextInput";
   input.value = todo.text || "";
   input.placeholder = "(blank)";
   input.setAttribute("aria-label", options.label || "Todo item");
   input.spellcheck = true;
 
+  const resize = ()=> {
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+  };
+
   const commit = ()=>{
     const next = input.value.replace(/\s+/g, " ").trim();
     todo.text = next;
     input.value = next;
+    resize();
     if(typeof options.onUpdate === "function"){
       options.onUpdate();
     }
   };
 
+  input.addEventListener("input", ()=> {
+    resize();
+  });
   input.addEventListener("blur", commit);
   input.addEventListener("keydown", (event)=> {
     if(event.key === "Enter"){
@@ -912,6 +1043,7 @@ function createTodoTextInput(todo, options = {}){
     }
   });
 
+  resize();
   return input;
 }
 
