@@ -411,9 +411,13 @@ function todoRow(t){
 
   const textWrap = document.createElement("div");
 
-  const title = document.createElement("div");
-  title.className = "todoText";
-  title.textContent = t.text || "(blank)";
+  const title = createTodoTextInput(t, {
+    label: "Work to do item",
+    onUpdate: ()=> {
+      autoSave();
+      render();
+    },
+  });
 
   const meta = document.createElement("div");
   meta.className = "todoMeta";
@@ -474,9 +478,13 @@ function homeTodoRow(t){
   });
 
   const textWrap = document.createElement("div");
-  const title = document.createElement("div");
-  title.className = "todoText";
-  title.textContent = t.text || "(blank)";
+  const title = createTodoTextInput(t, {
+    label: "Home to do item",
+    onUpdate: ()=> {
+      autoSave();
+      render();
+    },
+  });
   textWrap.appendChild(title);
 
   left.appendChild(check);
@@ -871,6 +879,40 @@ function escapeHtml(str){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+function createTodoTextInput(todo, options = {}){
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "todoText todoTextInput";
+  input.value = todo.text || "";
+  input.placeholder = "(blank)";
+  input.setAttribute("aria-label", options.label || "Todo item");
+  input.spellcheck = true;
+
+  const commit = ()=>{
+    const next = input.value.replace(/\s+/g, " ").trim();
+    todo.text = next;
+    input.value = next;
+    if(typeof options.onUpdate === "function"){
+      options.onUpdate();
+    }
+  };
+
+  input.addEventListener("blur", commit);
+  input.addEventListener("keydown", (event)=> {
+    if(event.key === "Enter"){
+      event.preventDefault();
+      input.blur();
+    }
+    if(event.key === "Escape"){
+      event.preventDefault();
+      input.value = todo.text || "";
+      input.blur();
+    }
+  });
+
+  return input;
 }
 
 function getIcsProxyOrigin(){

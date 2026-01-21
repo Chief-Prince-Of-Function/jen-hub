@@ -339,6 +339,21 @@ body{
   letter-spacing: .2px;
 }
 
+.todoTextInput{
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  outline: 2px dashed transparent;
+  outline-offset: 3px;
+}
+
+.todoTextInput:focus{
+  outline-color: rgba(255,255,255,.35);
+}
+
 .todoMeta{
   margin-top: 6px;
   font-size: 12px;
