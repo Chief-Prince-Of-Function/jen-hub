@@ -8,6 +8,7 @@
 const LS_KEY = "sister_hub_local_v0";
 const HUB_API_URL = "https://jen-hub-api.fusco13pi.workers.dev";
 const SECRET_KEY  = "jen_hub_secret_v1";
+const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 const el = (id)=> document.getElementById(id);
 
@@ -200,6 +201,7 @@ async function renderIcsCalendar(url, host){
   host.innerHTML = "Loading calendar…";
 
   try{
+    const text = await fetchIcsText(url);
     const res = await fetch(url);
     if(!res.ok){
       throw new Error("Unable to load calendar feed.");
@@ -231,6 +233,28 @@ async function renderIcsCalendar(url, host){
   }catch(err){
     if(host.dataset.requestId !== requestId) return;
     host.innerHTML = `<span class="muted">Unable to load calendar feed. ${escapeHtml(err?.message || err)}</span>`;
+  }
+}
+
+async function fetchIcsText(url){
+  const direct = await tryFetchText(url);
+  if(direct.ok) return direct.text;
+
+  const proxied = await tryFetchText(`${ICS_PROXY_URL}${encodeURIComponent(url)}`);
+  if(proxied.ok) return proxied.text;
+
+  throw new Error(direct.error || proxied.error || "Unable to load calendar feed.");
+}
+
+async function tryFetchText(url){
+  try{
+    const res = await fetch(url);
+    if(!res.ok){
+      return { ok: false, error: `Unable to load calendar feed (${res.status}).` };
+    }
+    return { ok: true, text: await res.text() };
+  }catch(err){
+    return { ok: false, error: err?.message || String(err) };
   }
 }
 
