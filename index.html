@@ -71,7 +71,10 @@
         <!-- Left column: Home calendar -->
         <section class="card card--home-cal">
           <h2 class="cardTitle">Home calendar:</h2>
-          <input id="homeCal" class="input" placeholder="Paste an embed URL or .ics feed URL" />
+          <div class="inputRow">
+            <input id="homeCal" class="input" placeholder="Home calendar auto-loaded" />
+            <button id="homeCalToggle" class="btn btnSmall" type="button">Edit</button>
+          </div>
           <p class="hint">Works with Google embeds or public .ics feeds. Some sites block embedding; then we show a link.</p>
           <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
         </section>

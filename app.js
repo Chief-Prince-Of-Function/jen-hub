@@ -93,6 +93,7 @@ const workCalPreview = el("workCalPreview");
 
 const homeCal = el("homeCal");
 const homeCalPreview = el("homeCalPreview");
+const homeCalToggle = el("homeCalToggle");
 
 const todoText = el("todoText");
 const todoDueDate = el("todoDueDate");
@@ -108,6 +109,7 @@ const saveStatus = el("saveStatus");
    State + boot
 ========================= */
 let state = defaultState();
+let homeCalRevealed = false;
 
 (async function boot(){
   try{
@@ -149,10 +151,18 @@ function render(){
   mantraBig.textContent = (state.notes.mantra || "Live And Not Just Survive").trim() || "Live And Not Just Survive";
 
   workCal.value = state.calendars.workEmbedUrl || "";
-  homeCal.value = state.calendars.homeEmbedUrl || "";
+  if(homeCalRevealed){
+    homeCal.value = state.calendars.homeEmbedUrl || "";
+    homeCal.placeholder = "Paste an embed URL or .ics feed URL";
+  }else{
+    homeCal.value = "";
+    homeCal.placeholder = "Home calendar auto-loaded";
+  }
+  homeCalToggle.textContent = homeCalRevealed ? "Hide" : "Edit";
+  homeCalToggle.setAttribute("aria-pressed", homeCalRevealed ? "true" : "false");
 
   renderEmbed(workCal.value, workCalPreview);
-  renderEmbed(homeCal.value, homeCalPreview);
+  renderEmbed(state.calendars.homeEmbedUrl, homeCalPreview);
 
   verseOut.textContent = state.verse.lastText
     ? `${state.verse.lastText}\n\n— ${state.verse.lastRef || ""}\n\nCached: ${state.verse.cachedAt || ""}`
@@ -471,6 +481,14 @@ homeCal.addEventListener("input", ()=>{
   state.calendars.homeEmbedUrl = homeCal.value.trim();
   renderEmbed(homeCal.value, homeCalPreview);
   autoSave();
+});
+
+homeCalToggle.addEventListener("click", ()=>{
+  homeCalRevealed = !homeCalRevealed;
+  render();
+  if(homeCalRevealed){
+    homeCal.focus();
+  }
 });
 
 todoAddBtn.addEventListener("click", addTodo);
