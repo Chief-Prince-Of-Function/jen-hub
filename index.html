@@ -14,7 +14,8 @@
     <!-- Header -->
     <header class="topCard">
       <div class="topLeft">
-        <h1 class="scriptTitle">My Life Organized</h1>
+        <h1 class="scriptTitle">My Life</h1>
+        <p class="scriptQuote">“Live And Not Just Survive”</p>
       </div>
 
       <div class="topRight">
@@ -72,44 +73,8 @@
         </div>
       </section>
 
-      <!-- Right column -->
-      <aside class="rightCol">
-        <!-- Verse -->
-        <section class="card">
-          <h2 class="cardTitle">Bible Verse Of The Day:</h2>
-
-          <div class="btnRow">
-            <button id="btnVerseRefresh" class="btn">Refresh verse</button>
-            <span id="verseStatus" class="pill muted">Idle</span>
-          </div>
-
-          <div id="verseOut" class="monoBox">
-            Not loaded yet.
-          </div>
-
-          <p class="hint">
-            For now this is a placeholder. We’ll wire the real API later.
-          </p>
-        </section>
-
-        <!-- Mantra -->
-        <section class="card">
-          <h2 class="cardTitle">Live And Not Just Survive</h2>
-          <input id="mantra" class="input" placeholder="Live And Not Just Survive" />
-          <div class="scriptBig" id="mantraBig">Live And Not Just Survive</div>
-        </section>
-
-        <!-- Home calendar -->
-        <section class="card">
-          <h2 class="cardTitle">Home calendar:</h2>
-          <input id="homeCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
-          <p class="hint">Some sites block embedding; if so, it will show a link instead.</p>
-          <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
-        </section>
-      </aside>
-
       <!-- Bottom left: Todos -->
-      <section class="card span2">
+      <section class="card">
         <h2 class="cardTitle">Work To Do List:</h2>
 
         <div class="todoAdd">
@@ -130,6 +95,35 @@
           <span id="saveStatus" class="pill muted">Not saved</span>
         </div>
       </section>
+
+      <!-- Right column -->
+      <aside class="rightCol">
+        <!-- Verse -->
+        <section class="card">
+          <h2 class="cardTitle">Bible Verse Of The Day:</h2>
+
+          <div class="btnRow">
+            <button id="btnVerseRefresh" class="btn">Refresh verse</button>
+            <span id="verseStatus" class="pill muted">Idle</span>
+          </div>
+
+          <div id="verseOut" class="monoBox">
+            Not loaded yet.
+          </div>
+
+          <p class="hint">
+            For now this is a placeholder. We’ll wire the real API later.
+          </p>
+        </section>
+
+        <!-- Home calendar -->
+        <section class="card">
+          <h2 class="cardTitle">Home calendar:</h2>
+          <input id="homeCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
+          <p class="hint">Some sites block embedding; if so, it will show a link instead.</p>
+          <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+        </section>
+      </aside>
     </section>
 
     <footer class="foot">
