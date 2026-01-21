@@ -89,7 +89,12 @@ body{
 }
 
 .span2{ grid-column: 1 / -1; }
-.rightCol{ display: contents; }
+
+.col{
+  display:flex;
+  flex-direction:column;
+  gap: 14px;
+}
 
 .card{
   background: var(--card);
@@ -97,7 +102,8 @@ body{
   border-radius: var(--radius);
   padding: 14px;
   backdrop-filter: blur(10px);
-  align-self: start;
+  width: 100%;
+  align-self: stretch;
 }
 
 .cardTitle{
@@ -294,6 +300,7 @@ body{
     grid-template-columns: 1fr;
   }
   .span2{ grid-column: auto; }
+  .col{ gap: 12px; }
   .twoCol{ grid-template-columns: 1fr; }
   .todoAdd{ grid-template-columns: 1fr; }
   .topCard{ flex-direction:column; align-items:flex-start; }
