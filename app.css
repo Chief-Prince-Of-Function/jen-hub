@@ -339,6 +339,16 @@ body{
   letter-spacing: .2px;
 }
 
+.todoText[contenteditable="true"]{
+  cursor: text;
+  outline: 2px dashed transparent;
+  outline-offset: 3px;
+}
+
+.todoText[contenteditable="true"]:focus{
+  outline-color: rgba(255,255,255,.35);
+}
+
 .todoMeta{
   margin-top: 6px;
   font-size: 12px;
