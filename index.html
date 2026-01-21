@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2b1247" />
+  <title>My Life Organized</title>
+
+  <link rel="stylesheet" href="app.css" />
+</head>
+
+<body>
+  <main class="wrap">
+    <!-- Header -->
+    <header class="topCard">
+      <div class="topLeft">
+        <h1 class="scriptTitle">My Life Organized</h1>
+      </div>
+
+      <div class="topRight">
+        <div class="timeRow">
+          <div id="clock" class="clock">--:--</div>
+        </div>
+        <div id="dateLine" class="dateLine">---</div>
+        <div id="savedLine" class="savedLine">Saved: —</div>
+      </div>
+    </header>
+
+    <!-- Grid -->
+    <section class="grid">
+      <!-- Left big -->
+      <section class="card span2">
+        <h2 class="cardTitle">Local weather / Work calendar:</h2>
+
+        <div class="twoCol">
+          <!-- Weather settings -->
+          <div class="subCard">
+            <h3 class="subTitle">Weather location</h3>
+
+            <div class="row2">
+              <input id="weatherLabel" class="input" placeholder="Home" />
+              <input id="weatherZip" class="input" placeholder="ZIP" inputmode="numeric" />
+              <input id="weatherLat" class="input" placeholder="Latitude" />
+              <input id="weatherLon" class="input" placeholder="Longitude" />
+            </div>
+
+            <p class="hint">
+              Tip: Use ZIP or lat/lon (you can set lat/lon later).
+            </p>
+
+            <div class="btnRow">
+              <button id="btnWeatherRefresh" class="btn">Refresh weather</button>
+              <span id="weatherStatus" class="pill muted">Idle</span>
+            </div>
+          </div>
+
+          <!-- Weather output -->
+          <div class="subCard">
+            <h3 class="subTitle">Weather</h3>
+            <div id="weatherOut" class="monoBox">
+              Not loaded yet.
+            </div>
+          </div>
+        </div>
+
+        <!-- Work calendar -->
+        <div class="subCard mt">
+          <h3 class="subTitle">Work calendar (embed or link)</h3>
+          <input id="workCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
+          <p class="hint">If embed is blocked, it will show a link instead.</p>
+          <div id="workCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <aside class="rightCol">
+        <!-- Verse -->
+        <section class="card">
+          <h2 class="cardTitle">Bible Verse Of The Day:</h2>
+
+          <div class="btnRow">
+            <button id="btnVerseRefresh" class="btn">Refresh verse</button>
+            <span id="verseStatus" class="pill muted">Idle</span>
+          </div>
+
+          <div id="verseOut" class="monoBox">
+            Not loaded yet.
+          </div>
+
+          <p class="hint">
+            For now this is a placeholder. We’ll wire the real API later.
+          </p>
+        </section>
+
+        <!-- Mantra -->
+        <section class="card">
+          <h2 class="cardTitle">Live And Not Just Survive</h2>
+          <input id="mantra" class="input" placeholder="Live And Not Just Survive" />
+          <div class="scriptBig" id="mantraBig">Live And Not Just Survive</div>
+        </section>
+
+        <!-- Home calendar -->
+        <section class="card">
+          <h2 class="cardTitle">Home calendar:</h2>
+          <input id="homeCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
+          <p class="hint">Some sites block embedding; if so, it will show a link instead.</p>
+          <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+        </section>
+      </aside>
+
+      <!-- Bottom left: Todos -->
+      <section class="card span2">
+        <h2 class="cardTitle">Work To Do List:</h2>
+
+        <div class="todoAdd">
+          <input id="todoText" class="input" placeholder="Add a task..." />
+          <select id="todoPriority" class="input select">
+            <option value="low">Priority: Low</option>
+            <option value="med" selected>Priority: Medium</option>
+            <option value="high">Priority: High</option>
+          </select>
+          <button id="todoAddBtn" class="btn">Add</button>
+        </div>
+
+        <div id="todoList" class="todoList"></div>
+
+        <div class="btnRow mt">
+          <button id="btnSave" class="btn ghost">Save</button>
+          <button id="btnReset" class="btn ghost">Reset</button>
+          <span id="saveStatus" class="pill muted">Not saved</span>
+        </div>
+      </section>
+    </section>
+
+    <footer class="foot">
+      <span class="mutedSmall">Sister Hub · GitHub Pages (UI) · Cloudflare Worker/KV (data) — coming next</span>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
