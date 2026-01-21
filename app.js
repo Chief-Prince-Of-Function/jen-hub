@@ -201,6 +201,8 @@ async function renderIcsCalendar(url, host){
   host.innerHTML = "Loading calendar…";
 
   try{
+    const icsText = await fetchIcsText(url);
+    const events = parseIcsEvents(icsText);
     const text = await fetchIcsText(url);
     const res = await fetch(url);
     if(!res.ok){
