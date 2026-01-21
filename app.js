@@ -13,6 +13,7 @@ const ICS_PROXY_URLS = [
   "https://corsproxy.io/?",
   "https://thingproxy.freeboard.io/fetch/",
 ];
+const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 const el = (id)=> document.getElementById(id);
 
@@ -207,6 +208,13 @@ async function renderIcsCalendar(url, host){
   try{
     const icsText = await fetchIcsText(url);
     const events = parseIcsEvents(icsText);
+    const text = await fetchIcsText(url);
+    const res = await fetch(url);
+    if(!res.ok){
+      throw new Error("Unable to load calendar feed.");
+    }
+    const text = await res.text();
+    const events = parseIcsEvents(text);
     const upcoming = filterUpcomingEvents(events).slice(0, 6);
 
     if(host.dataset.requestId !== requestId) return;
@@ -252,11 +260,19 @@ async function fetchIcsText(url){
   }
 
   throw new Error(errors.join(" | ") || "Unable to load calendar feed.");
+  const direct = await tryFetchText(url);
+  if(direct.ok) return direct.text;
+
+  const proxied = await tryFetchText(`${ICS_PROXY_URL}${encodeURIComponent(url)}`);
+  if(proxied.ok) return proxied.text;
+
+  throw new Error(direct.error || proxied.error || "Unable to load calendar feed.");
 }
 
 async function tryFetchText(url){
   try{
     const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url);
     if(!res.ok){
       return { ok: false, error: `Unable to load calendar feed (${res.status}).` };
     }
