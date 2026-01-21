@@ -257,6 +257,10 @@ body{
   margin-top: 2px;
 }
 
+.homeCalUrl{
+  display: none;
+}
+
 .scriptBig{
   margin-top: 10px;
   font-family: var(--script);
