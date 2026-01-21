@@ -106,13 +106,16 @@
           <h2 class="cardTitle">Work To Do List:</h2>
 
           <div class="todoAdd">
-            <input id="todoText" class="input" placeholder="Add a task..." />
-            <select id="todoPriority" class="input select">
-              <option value="low">Priority: Low</option>
-              <option value="med" selected>Priority: Medium</option>
-              <option value="high">Priority: High</option>
-            </select>
-            <button id="todoAddBtn" class="btn">Add</button>
+            <input id="todoText" class="input todoAddText" placeholder="Add a task..." />
+            <div class="todoAddControls">
+              <input id="todoDueDate" class="input" type="date" />
+              <select id="todoPriority" class="input select">
+                <option value="low">Priority: Low</option>
+                <option value="med" selected>Priority: Medium</option>
+                <option value="high">Priority: High</option>
+              </select>
+              <button id="todoAddBtn" class="btn">Add</button>
+            </div>
           </div>
 
           <div id="todoList" class="todoList"></div>
