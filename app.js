@@ -87,6 +87,7 @@ const homeCal = el("homeCal");
 const homeCalPreview = el("homeCalPreview");
 
 const todoText = el("todoText");
+const todoDueDate = el("todoDueDate");
 const todoPriority = el("todoPriority");
 const todoAddBtn = el("todoAddBtn");
 const todoList = el("todoList");
@@ -208,9 +209,14 @@ function todoRow(t){
 
   const meta = document.createElement("div");
   meta.className = "todoMeta";
-  meta.textContent = t.createdAt
-    ? `Added: ${new Date(t.createdAt).toLocaleDateString()}`
-    : "";
+  const metaParts = [];
+  if(t.createdAt){
+    metaParts.push(`Added: ${new Date(t.createdAt).toLocaleDateString()}`);
+  }
+  if(t.dueDate){
+    metaParts.push(`Due: ${formatDueDate(t.dueDate)}`);
+  }
+  meta.textContent = metaParts.join(" · ");
 
   textWrap.appendChild(title);
   textWrap.appendChild(meta);
@@ -218,12 +224,26 @@ function todoRow(t){
   left.appendChild(check);
   left.appendChild(textWrap);
 
+  const actions = document.createElement("div");
+  actions.className = "todoActions";
+
   const tag = document.createElement("div");
   tag.className = `tag ${t.priority || "med"}`;
   tag.textContent = `Priority: ${cap(t.priority || "med")}`;
 
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn btnSmall btnDanger";
+  del.textContent = "Delete";
+  del.addEventListener("click", ()=>{
+    deleteTodo(t.id);
+  });
+
+  actions.appendChild(tag);
+  actions.appendChild(del);
+
   row.appendChild(left);
-  row.appendChild(tag);
+  row.appendChild(actions);
 
   return row;
 }
@@ -350,6 +370,7 @@ function addTodo(){
   if(!txt) return;
 
   const p = todoPriority.value || "med";
+  const dueDate = (todoDueDate.value || "").trim();
 
   state.todos.work = state.todos.work || [];
   state.todos.work.unshift({
@@ -357,10 +378,18 @@ function addTodo(){
     text: txt,
     priority: p,
     done: false,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    dueDate: dueDate || ""
   });
 
   todoText.value = "";
+  todoDueDate.value = "";
+  autoSave();
+  render();
+}
+
+function deleteTodo(id){
+  state.todos.work = (state.todos.work || []).filter((t)=> t.id !== id);
   autoSave();
   render();
 }
@@ -394,6 +423,12 @@ function defaultState(){
 
 function cap(s){ return (s||"").charAt(0).toUpperCase() + (s||"").slice(1); }
 function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+function formatDueDate(value){
+  if(!value) return "";
+  const date = new Date(`${value}T00:00:00`);
+  if(Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString();
+}
 
 function escapeHtml(str){
   return String(str || "")
