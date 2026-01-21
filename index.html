@@ -29,9 +29,9 @@
 
     <!-- Grid -->
     <section class="grid">
-      <!-- Left big -->
+      <!-- Top full-span weather card -->
       <section class="card span2">
-        <h2 class="cardTitle">Local weather / Work calendar:</h2>
+        <h2 class="cardTitle">Local weather:</h2>
 
         <div class="twoCol">
           <!-- Weather settings -->
@@ -64,41 +64,18 @@
           </div>
         </div>
 
-        <!-- Work calendar -->
-        <div class="subCard mt">
-          <h3 class="subTitle">Work calendar (embed or link)</h3>
-          <input id="workCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
-          <p class="hint">If embed is blocked, it will show a link instead.</p>
-          <div id="workCalPreview" class="embedBox">Paste a calendar embed link above.</div>
-        </div>
       </section>
 
-      <!-- Bottom left: Todos -->
-      <section class="card">
-        <h2 class="cardTitle">Work To Do List:</h2>
+      <div class="col">
+        <!-- Left column: Home calendar -->
+        <section class="card">
+          <h2 class="cardTitle">Home calendar:</h2>
+          <input id="homeCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
+          <p class="hint">Some sites block embedding; if so, it will show a link instead.</p>
+          <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+        </section>
 
-        <div class="todoAdd">
-          <input id="todoText" class="input" placeholder="Add a task..." />
-          <select id="todoPriority" class="input select">
-            <option value="low">Priority: Low</option>
-            <option value="med" selected>Priority: Medium</option>
-            <option value="high">Priority: High</option>
-          </select>
-          <button id="todoAddBtn" class="btn">Add</button>
-        </div>
-
-        <div id="todoList" class="todoList"></div>
-
-        <div class="btnRow mt">
-          <button id="btnSave" class="btn ghost">Save</button>
-          <button id="btnReset" class="btn ghost">Reset</button>
-          <span id="saveStatus" class="pill muted">Not saved</span>
-        </div>
-      </section>
-
-      <!-- Right column -->
-      <aside class="rightCol">
-        <!-- Verse -->
+        <!-- Left column: Verse -->
         <section class="card">
           <h2 class="cardTitle">Bible Verse Of The Day:</h2>
 
@@ -115,15 +92,40 @@
             For now this is a placeholder. We’ll wire the real API later.
           </p>
         </section>
+      </div>
 
-        <!-- Home calendar -->
+      <div class="col">
+        <!-- Right column: Todos -->
         <section class="card">
-          <h2 class="cardTitle">Home calendar:</h2>
-          <input id="homeCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
-          <p class="hint">Some sites block embedding; if so, it will show a link instead.</p>
-          <div id="homeCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+          <h2 class="cardTitle">Work To Do List:</h2>
+
+          <div class="todoAdd">
+            <input id="todoText" class="input" placeholder="Add a task..." />
+            <select id="todoPriority" class="input select">
+              <option value="low">Priority: Low</option>
+              <option value="med" selected>Priority: Medium</option>
+              <option value="high">Priority: High</option>
+            </select>
+            <button id="todoAddBtn" class="btn">Add</button>
+          </div>
+
+          <div id="todoList" class="todoList"></div>
+
+          <div class="btnRow mt">
+            <button id="btnSave" class="btn ghost">Save</button>
+            <button id="btnReset" class="btn ghost">Reset</button>
+            <span id="saveStatus" class="pill muted">Not saved</span>
+          </div>
         </section>
-      </aside>
+
+        <!-- Right column: Work calendar -->
+        <section class="card">
+          <h2 class="cardTitle">Work calendar:</h2>
+          <input id="workCal" class="input" placeholder="Paste an embed URL (best) or a normal link" />
+          <p class="hint">If embed is blocked, it will show a link instead.</p>
+          <div id="workCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+        </section>
+      </div>
     </section>
 
     <footer class="foot">
