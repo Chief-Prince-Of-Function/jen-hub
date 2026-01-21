@@ -648,6 +648,31 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
+function getIcsProxyOrigin(){
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = (params.get("icsProxy") || "").trim();
+  if(fromQuery){
+    localStorage.setItem(ICS_PROXY_ORIGIN_KEY, fromQuery);
+    return stripTrailingSlash(fromQuery);
+  }
+
+  const fromWindow = (window.ICS_PROXY_ORIGIN || "").trim();
+  if(fromWindow){
+    return stripTrailingSlash(fromWindow);
+  }
+
+  const fromStorage = (localStorage.getItem(ICS_PROXY_ORIGIN_KEY) || "").trim();
+  if(fromStorage){
+    return stripTrailingSlash(fromStorage);
+  }
+
+  return window.location.origin;
+}
+
+function stripTrailingSlash(value){
+  return value.endsWith("/") ? value.slice(0, -1) : value;
+}
+
 async function fetchWeather(){
   const label = (state.weather.locationLabel || "Home").trim();
   const latRaw = state.weather.lat.trim();
