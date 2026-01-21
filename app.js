@@ -8,6 +8,11 @@
 const LS_KEY = "sister_hub_local_v0";
 const HUB_API_URL = "https://jen-hub-api.fusco13pi.workers.dev";
 const SECRET_KEY  = "jen_hub_secret_v1";
+const ICS_PROXY_URLS = [
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?",
+  "https://thingproxy.freeboard.io/fetch/",
+];
 const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 const el = (id)=> document.getElementById(id);
@@ -239,6 +244,22 @@ async function renderIcsCalendar(url, host){
 }
 
 async function fetchIcsText(url){
+  const sources = [
+    { label: "direct", url },
+    ...ICS_PROXY_URLS.map((proxy)=> ({
+      label: proxy,
+      url: `${proxy}${encodeURIComponent(url)}`,
+    })),
+  ];
+
+  const errors = [];
+  for (const source of sources){
+    const result = await tryFetchText(source.url);
+    if(result.ok) return result.text;
+    errors.push(`${source.label}: ${result.error}`);
+  }
+
+  throw new Error(errors.join(" | ") || "Unable to load calendar feed.");
   const direct = await tryFetchText(url);
   if(direct.ok) return direct.text;
 
@@ -250,6 +271,7 @@ async function fetchIcsText(url){
 
 async function tryFetchText(url){
   try{
+    const res = await fetch(url, { cache: "no-store" });
     const res = await fetch(url);
     if(!res.ok){
       return { ok: false, error: `Unable to load calendar feed (${res.status}).` };
