@@ -14,7 +14,7 @@ const ICS_PROXY_URLS = [
   "https://thingproxy.freeboard.io/fetch/",
 ];
 const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
-const DEFAULT_HOME_CAL_URL = "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics";
+const DEFAULT_HOME_CAL_URL = "https://rest.cozi.com/api/ext/1103/8df50700-4210-4b27-9d16-bacc9b9468a7/icalendar/feed/feed.ics";
 const CURRENT_SCHEMA = 2;
 
 const el = (id)=> document.getElementById(id);
