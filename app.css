@@ -279,7 +279,7 @@ body{
 .todoMeta{
   margin-top: 6px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--card-ink-soft);
 }
 
 .tag{
