@@ -36,6 +36,11 @@ export default {
 
       const upstream = await fetch(target, {
         cf: { cacheEverything: true, cacheTtl: 300 },
+        headers: {
+          Accept: "text/calendar, text/plain;q=0.9, */*;q=0.8",
+          "User-Agent": "Mozilla/5.0 (compatible; JenHub/1.0)",
+          Referer: "https://rest.cozi.com/",
+        },
       });
       const contentType =
         upstream.headers.get("content-type") || "text/calendar; charset=utf-8";
