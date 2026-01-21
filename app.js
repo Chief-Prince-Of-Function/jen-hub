@@ -453,6 +453,15 @@ function todoRow(t, options = {}){
   tag.className = `tag ${t.priority || "med"}`;
   tag.textContent = `Priority: ${cap(t.priority || "med")}`;
 
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn btnSmall btnIcon btnDanger";
+  del.setAttribute("aria-label", "Delete item");
+  del.textContent = "×";
+  del.addEventListener("click", ()=>{
+    deleteTodo(t.id);
+  });
+
   const moveWrap = document.createElement("div");
   moveWrap.className = "todoMove";
 
@@ -480,18 +489,13 @@ function todoRow(t, options = {}){
   moveWrap.appendChild(moveUp);
   moveWrap.appendChild(moveDown);
 
-  const del = document.createElement("button");
-  del.type = "button";
-  del.className = "btn btnSmall btnIcon btnDanger";
-  del.setAttribute("aria-label", "Delete item");
-  del.textContent = "×";
-  del.addEventListener("click", ()=>{
-    deleteTodo(t.id);
-  });
+  const actionRow = document.createElement("div");
+  actionRow.className = "todoActionRow";
+  actionRow.appendChild(moveWrap);
+  actionRow.appendChild(del);
 
   actions.appendChild(tag);
-  actions.appendChild(moveWrap);
-  actions.appendChild(del);
+  actions.appendChild(actionRow);
 
   row.appendChild(left);
   row.appendChild(actions);
@@ -535,6 +539,15 @@ function homeTodoRow(t, options = {}){
   const actions = document.createElement("div");
   actions.className = "todoActions";
 
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn btnSmall btnIcon btnDanger";
+  del.setAttribute("aria-label", "Delete item");
+  del.textContent = "×";
+  del.addEventListener("click", ()=> {
+    deleteHomeTodo(t.id);
+  });
+
   const moveWrap = document.createElement("div");
   moveWrap.className = "todoMove";
 
@@ -561,17 +574,12 @@ function homeTodoRow(t, options = {}){
   moveWrap.appendChild(moveUp);
   moveWrap.appendChild(moveDown);
 
-  const del = document.createElement("button");
-  del.type = "button";
-  del.className = "btn btnSmall btnIcon btnDanger";
-  del.setAttribute("aria-label", "Delete item");
-  del.textContent = "×";
-  del.addEventListener("click", ()=> {
-    deleteHomeTodo(t.id);
-  });
+  const actionRow = document.createElement("div");
+  actionRow.className = "todoActionRow";
+  actionRow.appendChild(moveWrap);
+  actionRow.appendChild(del);
 
-  actions.appendChild(moveWrap);
-  actions.appendChild(del);
+  actions.appendChild(actionRow);
 
   row.appendChild(left);
   row.appendChild(actions);
@@ -1044,6 +1052,7 @@ function createTodoTextInput(todo, options = {}){
   });
 
   resize();
+  requestAnimationFrame(resize);
   return input;
 }
 
