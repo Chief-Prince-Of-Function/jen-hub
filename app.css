@@ -311,9 +311,26 @@ body{
   gap:10px;
 }
 
+.todoSortRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.todoSortLabel{
+  font-weight: 700;
+  color: var(--card-ink-soft);
+}
+
+.todoSortSelect{
+  min-width: 200px;
+}
+
 .todoItem{
   display:flex;
-  align-items:flex-start;
+  align-items:stretch;
   justify-content:space-between;
   gap: 12px;
   padding: 12px;
@@ -326,12 +343,19 @@ body{
   display:flex;
   gap:10px;
   align-items:flex-start;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .todoCheck{
   margin-top: 2px;
   transform: scale(1.2);
   accent-color: var(--card-ink-soft);
+}
+
+.todoTextWrap{
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .todoText{
@@ -348,6 +372,10 @@ body{
   font: inherit;
   outline: 2px dashed transparent;
   outline-offset: 3px;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .todoTextInput:focus{
@@ -365,6 +393,12 @@ body{
   flex-direction:column;
   align-items:flex-end;
   gap: 8px;
+  flex: 0 0 auto;
+}
+
+.todoMove{
+  display:flex;
+  gap: 6px;
 }
 
 .tag{
@@ -379,6 +413,18 @@ body{
 .btnSmall{
   padding: 6px 10px;
   font-size: 12px;
+}
+
+.btnIcon{
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
 }
 
 .btnDanger{
