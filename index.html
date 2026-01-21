@@ -30,38 +30,36 @@
 
     <!-- Grid -->
     <section class="grid">
-      <!-- Top full-span weather card -->
-      <section class="card span2 card--weather">
-        <h2 class="cardTitle">Local weather:</h2>
-
-        <div class="twoCol">
-          <!-- Weather settings -->
-          <div class="subCard">
-            <h3 class="subTitle">Weather location</h3>
-
-            <div class="row2">
-              <input id="weatherLabel" class="input" placeholder="Home" />
-              <input id="weatherZip" class="input" placeholder="ZIP" inputmode="numeric" />
-            </div>
-
-            <div class="btnRow">
-              <button id="btnWeatherRefresh" class="btn">Refresh weather</button>
-              <span id="weatherStatus" class="pill muted">Idle</span>
-            </div>
-          </div>
-
-          <!-- Weather output -->
-          <div class="subCard">
-            <h3 class="subTitle">Weather</h3>
-            <div id="weatherOut" class="monoBox">
-              Not loaded yet.
-            </div>
-          </div>
-        </div>
-
-      </section>
-
       <div class="col">
+        <section class="card card--weather">
+          <h2 class="cardTitle">Local weather:</h2>
+
+          <div class="twoCol">
+            <!-- Weather settings -->
+            <div class="subCard">
+              <h3 class="subTitle">Weather location</h3>
+
+              <div class="row2">
+                <input id="weatherLabel" class="input" placeholder="Home" />
+                <input id="weatherZip" class="input" placeholder="ZIP" inputmode="numeric" />
+              </div>
+
+              <div class="btnRow">
+                <button id="btnWeatherRefresh" class="btn">Refresh weather</button>
+                <span id="weatherStatus" class="pill muted">Idle</span>
+              </div>
+            </div>
+
+            <!-- Weather output -->
+            <div class="subCard">
+              <h3 class="subTitle">Weather</h3>
+              <div id="weatherOut" class="monoBox">
+                Not loaded yet.
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Left column: Home calendar -->
         <section class="card card--home-cal">
           <h2 class="cardTitle">Home calendar:</h2>
