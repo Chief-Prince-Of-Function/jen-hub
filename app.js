@@ -303,15 +303,15 @@ btnWeatherRefresh.addEventListener("click", async ()=>{
   weatherStatus.textContent = "Loading…";
   weatherStatus.classList.remove("muted");
 
-  // Placeholder until we wire real weather
-  await sleep(500);
-
-  const label = state.weather.locationLabel || "Home";
-  const zip = state.weather.zip ? ` (${state.weather.zip})` : "";
-  state.weather.lastText = `Weather for ${label}${zip}\n\nSunny-ish.\nHigh: 72°F\nLow: 55°F`;
-
-  weatherStatus.textContent = "OK";
-  weatherStatus.classList.add("muted");
+  try{
+    const weather = await fetchWeather();
+    state.weather.lastText = weather;
+    weatherStatus.textContent = "OK";
+    weatherStatus.classList.add("muted");
+  }catch(err){
+    weatherStatus.textContent = `Error: ${err?.message || err}`;
+    weatherStatus.classList.remove("muted");
+  }
 
   autoSave();
   render();
@@ -402,4 +402,116 @@ function escapeHtml(str){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+async function fetchWeather(){
+  const label = (state.weather.locationLabel || "Home").trim();
+  const latRaw = state.weather.lat.trim();
+  const lonRaw = state.weather.lon.trim();
+  const zip = state.weather.zip.trim();
+
+  let location = null;
+  if(latRaw && lonRaw){
+    const lat = Number(latRaw);
+    const lon = Number(lonRaw);
+    if(Number.isNaN(lat) || Number.isNaN(lon)){
+      throw new Error("Latitude/longitude must be numbers.");
+    }
+    location = { lat, lon, name: label };
+  }else if(zip){
+    const geoUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
+    geoUrl.searchParams.set("name", zip);
+    geoUrl.searchParams.set("count", "1");
+    geoUrl.searchParams.set("language", "en");
+    geoUrl.searchParams.set("format", "json");
+    const geoRes = await fetch(geoUrl);
+    if(!geoRes.ok){
+      throw new Error("Unable to find that ZIP code.");
+    }
+    const geo = await geoRes.json();
+    const hit = geo?.results?.[0];
+    if(!hit){
+      throw new Error("Unable to find that ZIP code.");
+    }
+    location = {
+      lat: hit.latitude,
+      lon: hit.longitude,
+      name: `${hit.name}${hit.admin1 ? `, ${hit.admin1}` : ""}`,
+    };
+  }else{
+    throw new Error("Add a ZIP or latitude/longitude first.");
+  }
+
+  const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
+  forecastUrl.searchParams.set("latitude", location.lat);
+  forecastUrl.searchParams.set("longitude", location.lon);
+  forecastUrl.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code");
+  forecastUrl.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,weather_code");
+  forecastUrl.searchParams.set("temperature_unit", "fahrenheit");
+  forecastUrl.searchParams.set("timezone", "auto");
+
+  const forecastRes = await fetch(forecastUrl);
+  if(!forecastRes.ok){
+    throw new Error("Weather service unavailable.");
+  }
+  const data = await forecastRes.json();
+
+  const current = data.current || {};
+  const daily = data.daily || {};
+  const description = describeWeatherCode(current.weather_code ?? daily.weather_code?.[0]);
+
+  const currentTemp = formatTemp(current.temperature_2m);
+  const feelsLike = formatTemp(current.apparent_temperature);
+  const high = formatTemp(daily.temperature_2m_max?.[0]);
+  const low = formatTemp(daily.temperature_2m_min?.[0]);
+
+  const lines = [
+    `Weather for ${location.name || label}${zip ? ` (${zip})` : ""}`,
+    "",
+    `${description}`,
+    `Now: ${currentTemp}${feelsLike ? ` (feels like ${feelsLike})` : ""}`,
+    `High: ${high} · Low: ${low}`,
+    `Updated: ${new Date().toLocaleString()}`
+  ];
+  return lines.join("\n");
+}
+
+function formatTemp(value){
+  if(value === undefined || value === null || Number.isNaN(Number(value))) return "—";
+  return `${Math.round(Number(value))}°F`;
+}
+
+function describeWeatherCode(code){
+  const table = {
+    0: "Clear sky",
+    1: "Mainly clear",
+    2: "Partly cloudy",
+    3: "Overcast",
+    45: "Fog",
+    48: "Depositing rime fog",
+    51: "Light drizzle",
+    53: "Moderate drizzle",
+    55: "Dense drizzle",
+    56: "Light freezing drizzle",
+    57: "Dense freezing drizzle",
+    61: "Slight rain",
+    63: "Moderate rain",
+    65: "Heavy rain",
+    66: "Light freezing rain",
+    67: "Heavy freezing rain",
+    71: "Slight snowfall",
+    73: "Moderate snowfall",
+    75: "Heavy snowfall",
+    77: "Snow grains",
+    80: "Slight rain showers",
+    81: "Moderate rain showers",
+    82: "Violent rain showers",
+    85: "Slight snow showers",
+    86: "Heavy snow showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm with slight hail",
+    99: "Thunderstorm with heavy hail",
+  };
+  if(code === undefined || code === null) return "Weather unavailable";
+  return table[code] || "Weather unavailable";
 }
