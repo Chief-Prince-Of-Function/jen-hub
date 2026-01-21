@@ -269,6 +269,7 @@ body{
 .todoCheck{
   margin-top: 2px;
   transform: scale(1.2);
+  accent-color: var(--card-ink-soft);
 }
 
 .todoText{
