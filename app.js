@@ -72,8 +72,6 @@ const savedLine = el("savedLine");
 
 const weatherLabel = el("weatherLabel");
 const weatherZip   = el("weatherZip");
-const weatherLat   = el("weatherLat");
-const weatherLon   = el("weatherLon");
 const btnWeatherRefresh = el("btnWeatherRefresh");
 const weatherStatus = el("weatherStatus");
 const weatherOut = el("weatherOut");
@@ -90,7 +88,6 @@ const workCalPreview = el("workCalPreview");
 
 const homeCal = el("homeCal");
 const homeCalPreview = el("homeCalPreview");
-const homeCalToggle = el("homeCalToggle");
 
 const todoText = el("todoText");
 const todoDueDate = el("todoDueDate");
@@ -106,7 +103,6 @@ const saveStatus = el("saveStatus");
    State + boot
 ========================= */
 let state = defaultState();
-let homeCalRevealed = false;
 
 (async function boot(){
   try{
@@ -141,22 +137,12 @@ setInterval(tick, 1000);
 function render(){
   weatherLabel.value = state.weather.locationLabel || "";
   weatherZip.value = state.weather.zip || "";
-  weatherLat.value = state.weather.lat || "";
-  weatherLon.value = state.weather.lon || "";
 
   mantra.value = state.notes.mantra || "";
   mantraBig.textContent = (state.notes.mantra || "Live And Not Just Survive").trim() || "Live And Not Just Survive";
 
   workCal.value = state.calendars.workEmbedUrl || "";
-  if(homeCalRevealed){
-    homeCal.value = state.calendars.homeEmbedUrl || "";
-    homeCal.placeholder = "Paste an embed URL or .ics feed URL";
-  }else{
-    homeCal.value = "";
-    homeCal.placeholder = "Home calendar auto-loaded";
-  }
-  homeCalToggle.textContent = homeCalRevealed ? "Hide" : "Edit";
-  homeCalToggle.setAttribute("aria-pressed", homeCalRevealed ? "true" : "false");
+  homeCal.value = state.calendars.homeEmbedUrl || "";
 
   renderEmbed(workCal.value, workCalPreview);
   renderEmbed(state.calendars.homeEmbedUrl, homeCalPreview);
@@ -441,13 +427,9 @@ weatherLabel.addEventListener("input", ()=>{
   autoSave();
 });
 
-[weatherZip, weatherLat, weatherLon].forEach((inp)=>{
-  inp.addEventListener("input", ()=>{
-    state.weather.zip = weatherZip.value.trim();
-    state.weather.lat = weatherLat.value.trim();
-    state.weather.lon = weatherLon.value.trim();
-    autoSave();
-  });
+weatherZip.addEventListener("input", ()=>{
+  state.weather.zip = weatherZip.value.trim();
+  autoSave();
 });
 
 mantra.addEventListener("input", ()=>{
@@ -462,19 +444,6 @@ workCal.addEventListener("input", ()=>{
   autoSave();
 });
 
-homeCal.addEventListener("input", ()=>{
-  state.calendars.homeEmbedUrl = homeCal.value.trim();
-  renderEmbed(homeCal.value, homeCalPreview);
-  autoSave();
-});
-
-homeCalToggle.addEventListener("click", ()=>{
-  homeCalRevealed = !homeCalRevealed;
-  render();
-  if(homeCalRevealed){
-    homeCal.focus();
-  }
-});
 
 todoAddBtn.addEventListener("click", addTodo);
 todoText.addEventListener("keydown", (e)=>{
