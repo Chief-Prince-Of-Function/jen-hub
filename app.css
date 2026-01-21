@@ -239,6 +239,8 @@ body{
 .todoAdd{
   display:flex;
   flex-direction:column;
+  display:grid;
+  grid-template-columns: 1fr 160px 180px 120px;
   gap:10px;
   margin-bottom: 12px;
 }
@@ -246,6 +248,13 @@ body{
 .todoAddControls{
   display:grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+.todoAddText{
+  width: 100%;
+}
+
+.todoAddControls{
+  display:grid;
+  grid-template-columns: 160px 1fr 120px;
   gap:10px;
 }
 
