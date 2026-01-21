@@ -1,14 +1,66 @@
 /* =========================
    Simple Sister Hub v0
    - Looks like your screenshot
-   - Local save first (localStorage)
-   - Later: swap save/load to Worker KV
+   - Cloud save/load via Cloudflare Worker + KV
+   - LocalStorage kept as a backup fallback
 ========================= */
 
 const LS_KEY = "sister_hub_local_v0";
+const HUB_API_URL = "https://jen-hub-api.fusco13pi.workers.dev";
+const SECRET_KEY  = "jen_hub_secret_v1";
 
 const el = (id)=> document.getElementById(id);
 
+/* =========================
+   Cloud helpers
+========================= */
+function getSecret(){
+  return (localStorage.getItem(SECRET_KEY) || "").trim();
+}
+
+function ensureSecret(){
+  let s = getSecret();
+  if(!s){
+    s = (window.prompt("Enter hub key (one-time per device):") || "").trim();
+    if(s) localStorage.setItem(SECRET_KEY, s);
+  }
+  return s;
+}
+
+async function hubFetch(path, options = {}){
+  const secret = ensureSecret();
+  if(!secret) throw new Error("Missing hub key");
+
+  const res = await fetch(`${HUB_API_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Hub-Secret": secret,
+      ...(options.headers || {}),
+    },
+  });
+
+  const ct = res.headers.get("content-type") || "";
+  const isJson = ct.includes("application/json");
+  const payload = isJson ? await res.json().catch(()=> ({})) : await res.text().catch(()=> "");
+
+  if(!res.ok){
+    throw new Error(payload?.error || `${res.status} ${res.statusText}`);
+  }
+  return payload;
+}
+
+async function loadRemote(){
+  return hubFetch("/data", { method: "GET" });
+}
+
+async function saveRemote(fullState){
+  return hubFetch("/data", { method: "POST", body: JSON.stringify(fullState) });
+}
+
+/* =========================
+   DOM refs
+========================= */
 const clockEl = el("clock");
 const dateLine = el("dateLine");
 const savedLine = el("savedLine");
@@ -43,7 +95,26 @@ const btnSave = el("btnSave");
 const btnReset = el("btnReset");
 const saveStatus = el("saveStatus");
 
-let state = loadLocal() || defaultState();
+/* =========================
+   State + boot
+========================= */
+let state = defaultState();
+
+(async function boot(){
+  try{
+    const remote = await loadRemote();
+    state = remote && typeof remote === "object" ? remote : defaultState();
+
+    // keep a local backup mirror (helpful if cloud ever fails)
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(_){}
+
+    setSaveStatus("Loaded ✅ (cloud)");
+  }catch(err){
+    state = loadLocal() || defaultState();
+    setSaveStatus("Loaded ⚠️ (local) — " + (err?.message || err));
+  }
+  render();
+})();
 
 /* =========================
    Clock
@@ -197,16 +268,16 @@ todoText.addEventListener("keydown", (e)=>{
   if(e.key === "Enter") addTodo();
 });
 
-btnSave.addEventListener("click", ()=>{
-  saveLocal(state);
-  setSaveStatus("Saved ✅");
+btnSave.addEventListener("click", async ()=>{
+  await saveNow("Saved");
 });
 
 btnReset.addEventListener("click", ()=>{
-  if(!confirm("Reset everything on THIS device?")) return;
+  if(!confirm("Reset everything on THIS device? (Cloud data will remain)")) return;
   localStorage.removeItem(LS_KEY);
+  // Keep the secret so it can still load cloud on refresh
   state = defaultState();
-  setSaveStatus("Reset.");
+  setSaveStatus("Reset (local).");
   render();
 });
 
@@ -247,6 +318,31 @@ btnWeatherRefresh.addEventListener("click", async ()=>{
 });
 
 /* =========================
+   Save / Autosave (cloud + local backup)
+========================= */
+async function saveNow(label = "Saved"){
+  try{
+    state.meta.updatedAt = new Date().toISOString();
+
+    // Local backup always
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(_){}
+
+    // Cloud save
+    await saveRemote(state);
+
+    setSaveStatus(`${label} ✅ (cloud)`);
+  }catch(err){
+    setSaveStatus(`${label} ⚠️ (local only) — ` + (err?.message || err));
+  }
+}
+
+let _saveTimer = null;
+function autoSave(){
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(()=>{ saveNow("Auto-saved"); }, 700);
+}
+
+/* =========================
    Helpers
 ========================= */
 function addTodo(){
@@ -269,34 +365,17 @@ function addTodo(){
   render();
 }
 
-let _saveTimer = null;
-function autoSave(){
-  // debounced local save
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(()=>{
-    saveLocal(state);
-    setSaveStatus("Auto-saved");
-  }, 400);
-}
-
 function setSaveStatus(txt){
   saveStatus.textContent = txt;
   state.meta.updatedAt = new Date().toISOString();
   savedLine.textContent = `Saved: ${new Date(state.meta.updatedAt).toLocaleString()}`;
 }
 
-function saveLocal(obj){
-  try{
-    obj.meta.updatedAt = new Date().toISOString();
-    localStorage.setItem(LS_KEY, JSON.stringify(obj));
-  }catch(e){}
-}
-
 function loadLocal(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : null;
-  }catch(e){
+  }catch(_){
     return null;
   }
 }
@@ -324,7 +403,3 @@ function escapeHtml(str){
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
-
-/* Boot */
-render();
-setSaveStatus("Loaded");
