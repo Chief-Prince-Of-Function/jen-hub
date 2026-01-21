@@ -8,12 +8,9 @@
 const LS_KEY = "sister_hub_local_v0";
 const HUB_API_URL = "https://jen-hub-api.fusco13pi.workers.dev";
 const SECRET_KEY  = "jen_hub_secret_v1";
-const ICS_PROXY_URLS = [
-  "https://api.allorigins.win/raw?url=",
-  "https://corsproxy.io/?",
-  "https://thingproxy.freeboard.io/fetch/",
-];
-const ICS_PROXY_URL = "https://api.allorigins.win/raw?url=";
+const ICS_PROXY_ORIGIN_KEY = "sister_hub_ics_proxy_origin";
+const DEFAULT_ICS_PROXY_ORIGIN = "https://jen-hub.fusco13pi.workers.dev";
+const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
 const DEFAULT_HOME_CAL_URL = "https://rest.cozi.com/api/ext/1103/8df50700-4210-4b27-9d16-bacc9b9468a7/icalendar/feed/feed.ics";
 const CURRENT_SCHEMA = 2;
 
@@ -249,22 +246,10 @@ async function renderIcsCalendar(url, host){
 }
 
 async function fetchIcsText(url){
-  const sources = [
-    { label: "direct", url },
-    ...ICS_PROXY_URLS.map((proxy)=> ({
-      label: proxy,
-      url: `${proxy}${encodeURIComponent(url)}`,
-    })),
-  ];
-
-  const errors = [];
-  for (const source of sources){
-    const result = await tryFetchText(source.url);
-    if(result.ok) return result.text;
-    errors.push(`${source.label}: ${result.error}`);
-  }
-
-  throw new Error(errors.join(" | ") || "Unable to load calendar feed.");
+  const proxyUrl = `${ICS_PROXY_URL}${encodeURIComponent(url)}`;
+  const result = await tryFetchText(proxyUrl);
+  if(result.ok) return result.text;
+  throw new Error(result.error || "Unable to load calendar feed.");
 }
 
 async function tryFetchText(url){
@@ -663,6 +648,35 @@ function escapeHtml(str){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+function getIcsProxyOrigin(){
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = (params.get("icsProxy") || "").trim();
+  if(fromQuery){
+    localStorage.setItem(ICS_PROXY_ORIGIN_KEY, fromQuery);
+    return stripTrailingSlash(fromQuery);
+  }
+
+  const fromWindow = (window.ICS_PROXY_ORIGIN || "").trim();
+  if(fromWindow){
+    return stripTrailingSlash(fromWindow);
+  }
+
+  const fromStorage = (localStorage.getItem(ICS_PROXY_ORIGIN_KEY) || "").trim();
+  if(fromStorage){
+    return stripTrailingSlash(fromStorage);
+  }
+
+  if(window.location.hostname.endsWith("github.io")){
+    return stripTrailingSlash(DEFAULT_ICS_PROXY_ORIGIN);
+  }
+
+  return window.location.origin;
+}
+
+function stripTrailingSlash(value){
+  return value.endsWith("/") ? value.slice(0, -1) : value;
 }
 
 async function fetchWeather(){
