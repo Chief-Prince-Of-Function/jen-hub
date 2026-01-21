@@ -228,6 +228,29 @@ body{
   color: var(--card-ink-soft);
 }
 
+.calendarList{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calendarItem{
+  background: rgba(0,0,0,.14);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.calendarItemTitle{
+  font-weight: 700;
+}
+
+.calendarItemMeta{
+  font-size: 12px;
+  color: var(--card-muted);
+  margin-top: 2px;
+}
+
 .scriptBig{
   margin-top: 10px;
   font-family: var(--script);
