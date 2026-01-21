@@ -5,9 +5,15 @@ const corsHeaders = {
 };
 
 function isAllowedIcsUrl(url) {
-  return url.startsWith(
-    "https://rest.cozi.com/api/ext/1103/8df50700-4210-4b27-9d16-bacc9b9468a7/icalendar/feed/feed.ics",
-  );
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return false;
+    if (parsed.hostname !== "rest.cozi.com") return false;
+    const path = parsed.pathname;
+    return path.startsWith("/api/ext/") && path.endsWith("/icalendar/feed/feed.ics");
+  } catch (error) {
+    return false;
+  }
 }
 
 export default {
