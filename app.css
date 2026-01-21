@@ -51,6 +51,14 @@ body{
   letter-spacing: .3px;
 }
 
+.scriptQuote{
+  margin: 6px 0 0 0;
+  font-family: var(--script);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
 .topRight{
   text-align:right;
   min-width: 220px;
