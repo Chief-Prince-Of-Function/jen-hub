@@ -8,8 +8,7 @@
 const LS_KEY = "sister_hub_local_v0";
 const HUB_API_URL = "https://jen-hub-api.fusco13pi.workers.dev";
 const SECRET_KEY  = "jen_hub_secret_v1";
-const ICS_PROXY_ORIGIN_KEY = "sister_hub_ics_proxy_origin";
-const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
+const ICS_PROXY_URL = "/ics?url=";
 const DEFAULT_HOME_CAL_URL = "https://rest.cozi.com/api/ext/1103/8df50700-4210-4b27-9d16-bacc9b9468a7/icalendar/feed/feed.ics";
 const CURRENT_SCHEMA = 2;
 
