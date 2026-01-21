@@ -11,8 +11,14 @@ const SECRET_KEY  = "jen_hub_secret_v1";
 const ICS_PROXY_ORIGIN_KEY = "sister_hub_ics_proxy_origin";
 const DEFAULT_ICS_PROXY_ORIGIN = "https://jen-hub.fusco13pi.workers.dev";
 const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
-const DEFAULT_HOME_CAL_URL = "https://rest.cozi.com/api/ext/1103/8df50700-4210-4b27-9d16-bacc9b9468a7/icalendar/feed/feed.ics";
-const CURRENT_SCHEMA = 2;
+const DEFAULT_HOME_CAL_URLS = [
+  "https://rest.cozi.com/api/ext/1103/c386f1c4-cb7d-4e9f-9f4b-b875e2503578/icalendar/feed/feed.ics",
+  "https://rest.cozi.com/api/ext/1103/64ed9ef6-f0a6-490c-8923-3b753f2ac638/icalendar/feed/feed.ics",
+  "https://rest.cozi.com/api/ext/1103/6e5c8ab7-1c9f-4fa5-a958-faa0901bafa2/icalendar/feed/feed.ics",
+  "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
+  "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
+];
+const CURRENT_SCHEMA = 3;
 
 const el = (id)=> document.getElementById(id);
 
@@ -142,10 +148,10 @@ function render(){
   mantraBig.textContent = (state.notes.mantra || "Live And Not Just Survive").trim() || "Live And Not Just Survive";
 
   workCal.value = state.calendars.workEmbedUrl || "";
-  homeCal.value = state.calendars.homeEmbedUrl || "";
+  homeCal.value = (state.calendars.homeEmbedUrls || []).join("\n");
 
   renderEmbed(workCal.value, workCalPreview);
-  renderEmbed(state.calendars.homeEmbedUrl, homeCalPreview);
+  renderHomeCalendar(state.calendars.homeEmbedUrls, homeCalPreview);
 
   verseOut.textContent = state.verse.lastText
     ? `${state.verse.lastText}\n\n— ${state.verse.lastRef || ""}\n\nCached: ${state.verse.cachedAt || ""}`
@@ -195,14 +201,23 @@ function looksLikeIcs(url){
   return clean.endsWith(".ics") || clean.includes("/ical") || clean.includes("icalendar");
 }
 
-async function renderIcsCalendar(url, host){
+function renderHomeCalendar(urls, host){
+  const cleanUrls = (urls || []).map((url)=> url.trim()).filter(Boolean);
+  if(!cleanUrls.length){
+    host.innerHTML = "No home calendars configured.";
+    return;
+  }
+  renderIcsCalendar(cleanUrls, host);
+}
+
+async function renderIcsCalendar(urls, host){
   const requestId = String((Number(host.dataset.requestId) || 0) + 1);
   host.dataset.requestId = requestId;
   host.innerHTML = "Loading calendar…";
 
   try{
-    const icsText = await fetchIcsText(url);
-    const events = parseIcsEvents(icsText);
+    const icsTexts = await fetchMultipleIcsTexts(urls);
+    const events = icsTexts.flatMap((text)=> parseIcsEvents(text));
     const upcoming = filterUpcomingEvents(events).slice(0, 6);
 
     if(host.dataset.requestId !== requestId) return;
@@ -229,6 +244,20 @@ async function renderIcsCalendar(url, host){
     if(host.dataset.requestId !== requestId) return;
     host.innerHTML = `<span class="muted">Unable to load calendar feed. ${escapeHtml(err?.message || err)}</span>`;
   }
+}
+
+async function fetchMultipleIcsTexts(urls){
+  const list = Array.isArray(urls) ? urls : [urls];
+  const results = await Promise.allSettled(list.map((url)=> fetchIcsText(url)));
+  const successes = results
+    .filter((result)=> result.status === "fulfilled")
+    .map((result)=> result.value);
+
+  if(successes.length === 0){
+    const firstError = results.find((result)=> result.status === "rejected");
+    throw (firstError && firstError.reason) || new Error("Unable to load calendar feed.");
+  }
+  return successes;
 }
 
 async function fetchIcsText(url){
@@ -581,8 +610,14 @@ function migrateState(baseState){
   if(schema < 2){
     stateToMigrate.calendars = stateToMigrate.calendars || {};
     if(!stateToMigrate.calendars.homeEmbedUrl){
-      stateToMigrate.calendars.homeEmbedUrl = DEFAULT_HOME_CAL_URL;
+      stateToMigrate.calendars.homeEmbedUrl = DEFAULT_HOME_CAL_URLS[0];
     }
+  }
+
+  if(schema < 3){
+    stateToMigrate.calendars = stateToMigrate.calendars || {};
+    stateToMigrate.calendars.homeEmbedUrls = [...DEFAULT_HOME_CAL_URLS];
+    delete stateToMigrate.calendars.homeEmbedUrl;
   }
 
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
@@ -594,7 +629,7 @@ function defaultState(){
   return {
     meta: { createdAt: now, updatedAt: now, schema: CURRENT_SCHEMA },
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"" },
-    calendars: { workEmbedUrl:"", homeEmbedUrl: DEFAULT_HOME_CAL_URL },
+    calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
     todos: { work: [], home: [] },
     notes: { mantra: "Live And Not Just Survive" }
