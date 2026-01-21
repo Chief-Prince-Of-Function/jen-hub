@@ -239,15 +239,10 @@ body{
 .todoAdd{
   display:flex;
   flex-direction:column;
-  display:grid;
-  grid-template-columns: 1fr 160px 180px 120px;
   gap:10px;
   margin-bottom: 12px;
 }
 
-.todoAddControls{
-  display:grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 .todoAddText{
   width: 100%;
 }
