@@ -413,7 +413,13 @@ function todoRow(t){
 
   const title = document.createElement("div");
   title.className = "todoText";
-  title.textContent = t.text || "(blank)";
+  makeTodoTextEditable(title, t, {
+    label: "Work to do item",
+    onUpdate: ()=> {
+      autoSave();
+      render();
+    },
+  });
 
   const meta = document.createElement("div");
   meta.className = "todoMeta";
@@ -476,7 +482,13 @@ function homeTodoRow(t){
   const textWrap = document.createElement("div");
   const title = document.createElement("div");
   title.className = "todoText";
-  title.textContent = t.text || "(blank)";
+  makeTodoTextEditable(title, t, {
+    label: "Home to do item",
+    onUpdate: ()=> {
+      autoSave();
+      render();
+    },
+  });
   textWrap.appendChild(title);
 
   left.appendChild(check);
@@ -871,6 +883,42 @@ function escapeHtml(str){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+function makeTodoTextEditable(titleEl, todo, options = {}){
+  const displayText = ()=> ((todo.text || "").trim() ? todo.text : "(blank)");
+  titleEl.setAttribute("contenteditable", "true");
+  titleEl.setAttribute("role", "textbox");
+  titleEl.setAttribute("aria-label", options.label || "Todo item");
+  titleEl.spellcheck = true;
+  titleEl.textContent = displayText();
+
+  titleEl.addEventListener("focus", ()=> {
+    if(!(todo.text || "").trim()){
+      titleEl.textContent = "";
+    }
+  });
+
+  titleEl.addEventListener("blur", ()=> {
+    const next = titleEl.textContent.replace(/\s+/g, " ").trim();
+    todo.text = next;
+    titleEl.textContent = next || "(blank)";
+    if(typeof options.onUpdate === "function"){
+      options.onUpdate();
+    }
+  });
+
+  titleEl.addEventListener("keydown", (event)=> {
+    if(event.key === "Enter"){
+      event.preventDefault();
+      titleEl.blur();
+    }
+    if(event.key === "Escape"){
+      event.preventDefault();
+      titleEl.textContent = displayText();
+      titleEl.blur();
+    }
+  });
 }
 
 function getIcsProxyOrigin(){
