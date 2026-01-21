@@ -245,6 +245,9 @@ body{
   margin-bottom: 12px;
 }
 
+.todoAddControls{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 .todoAddText{
   width: 100%;
 }
