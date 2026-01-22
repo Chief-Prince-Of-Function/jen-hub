@@ -18,7 +18,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 5;
+const CURRENT_SCHEMA = 6;
 
 const el = (id)=> document.getElementById(id);
 
@@ -109,6 +109,8 @@ const homeTodoText = el("homeTodoText");
 const homeTodoAddBtn = el("homeTodoAddBtn");
 const homeTodoList = el("homeTodoList");
 
+const workNotes = el("workNotes");
+
 const btnSave = el("btnSave");
 const btnReset = el("btnReset");
 const saveStatus = el("saveStatus");
@@ -176,6 +178,8 @@ function render(){
     sortMode: state.todos.workSort || "manual",
   })));
   renderHomeTodos();
+
+  workNotes.value = state.notes.workNotes || "";
 
   savedLine.textContent = state.meta.updatedAt
     ? `Saved: ${new Date(state.meta.updatedAt).toLocaleString()}`
@@ -606,6 +610,11 @@ mantra.addEventListener("input", ()=>{
   autoSave();
 });
 
+workNotes.addEventListener("input", ()=>{
+  state.notes.workNotes = workNotes.value;
+  autoSave();
+});
+
 workCal.addEventListener("input", ()=>{
   state.calendars.workEmbedUrl = workCal.value.trim();
   renderEmbed(workCal.value, workCalPreview);
@@ -972,6 +981,11 @@ function migrateState(baseState){
     stateToMigrate.todos.workSort = stateToMigrate.todos.workSort || "manual";
   }
 
+  if(schema < 6){
+    stateToMigrate.notes = stateToMigrate.notes || {};
+    stateToMigrate.notes.workNotes = stateToMigrate.notes.workNotes || "";
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -989,7 +1003,7 @@ function defaultState(){
     calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
     todos: { work: [], workSort: "manual", home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" } },
-    notes: { mantra: "Live And Not Just Survive" }
+    notes: { mantra: "Live And Not Just Survive", workNotes: "" }
   };
 }
 
