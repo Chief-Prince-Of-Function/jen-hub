@@ -1296,7 +1296,9 @@ async function refreshDailyMantraQuote(){
 }
 
 async function fetchVerseOfDay(){
-  const verseUrl = "https://beta.ourmanna.com/api/v1/get/?format=json";
+  const verseUrl = new URL("https://beta.ourmanna.com/api/v1/get/");
+  verseUrl.searchParams.set("format", "json");
+  verseUrl.searchParams.set("version", "NLT");
   const res = await fetch(verseUrl);
   if(!res.ok){
     throw new Error("Verse service unavailable.");
