@@ -8,9 +8,14 @@ function isAllowedIcsUrl(url) {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:") return false;
-    if (parsed.hostname !== "rest.cozi.com") return false;
     const path = parsed.pathname;
-    return path.startsWith("/api/ext/") && path.endsWith("/icalendar/feed/feed.ics");
+    if (parsed.hostname === "rest.cozi.com") {
+      return path.startsWith("/api/ext/") && path.endsWith("/icalendar/feed/feed.ics");
+    }
+    if (parsed.hostname === "outlook.office365.com") {
+      return path.startsWith("/owa/calendar/") && path.endsWith("/calendar.ics");
+    }
+    return false;
   } catch (error) {
     return false;
   }
