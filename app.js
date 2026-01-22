@@ -20,7 +20,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 7;
+const CURRENT_SCHEMA = 8;
 
 const el = (id)=> document.getElementById(id);
 
@@ -102,6 +102,7 @@ const todoDueDate = el("todoDueDate");
 const todoPriority = el("todoPriority");
 const todoAddBtn = el("todoAddBtn");
 const todoSort = el("todoSort");
+const todoFilter = el("todoFilter");
 const todoList = el("todoList");
 
 const homeTodoListSelect = el("homeTodoListSelect");
@@ -137,6 +138,7 @@ let state = defaultState();
   }
   render();
   refreshDailyMantraQuote();
+  initCollapsibleCards();
 })();
 
 /* =========================
@@ -174,6 +176,7 @@ function render(){
   weatherOut.textContent = state.weather.lastText || "Not loaded yet.";
 
   todoSort.value = state.todos.workSort || "manual";
+  todoFilter.value = state.todos.workFilter || "high";
   todoList.innerHTML = "";
   const workTodos = getWorkTodosForDisplay();
   workTodos.forEach((t, index)=> todoList.appendChild(todoRow(t, {
@@ -637,6 +640,12 @@ todoSort.addEventListener("change", ()=> {
   render();
 });
 
+todoFilter.addEventListener("change", ()=> {
+  state.todos.workFilter = todoFilter.value;
+  autoSave();
+  render();
+});
+
 homeTodoListSelect.addEventListener("change", ()=>{
   const homeTodos = ensureHomeTodoState();
   homeTodos.selectedListId = homeTodoListSelect.value;
@@ -823,9 +832,13 @@ function renderHomeTodos(){
 function getWorkTodosForDisplay(){
   const workTodos = state.todos.work || [];
   const mode = state.todos.workSort || "manual";
-  if(mode !== "priority") return workTodos;
+  const filter = state.todos.workFilter || "high";
+  const filtered = filter === "all"
+    ? workTodos
+    : workTodos.filter((item)=> (item.priority || "med") === filter);
+  if(mode !== "priority") return filtered;
   const priorityRank = { high: 0, med: 1, low: 2 };
-  return [...workTodos].sort((a, b)=> {
+  return [...filtered].sort((a, b)=> {
     const rankDiff = (priorityRank[a.priority || "med"] ?? 1) - (priorityRank[b.priority || "med"] ?? 1);
     if(rankDiff !== 0) return rankDiff;
     return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
@@ -1002,6 +1015,11 @@ function migrateState(baseState){
     stateToMigrate.notes.mantraLastAuthor = stateToMigrate.notes.mantraLastAuthor || "";
   }
 
+  if(schema < 8){
+    stateToMigrate.todos = stateToMigrate.todos || { work: [], home: [] };
+    stateToMigrate.todos.workFilter = stateToMigrate.todos.workFilter || "high";
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -1018,7 +1036,12 @@ function defaultState(){
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"" },
     calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
-    todos: { work: [], workSort: "manual", home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" } },
+    todos: {
+      work: [],
+      workSort: "manual",
+      workFilter: "high",
+      home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" }
+    },
     notes: {
       mantra: "Live And Not Just Survive",
       workNotes: "",
@@ -1090,6 +1113,22 @@ function createTodoTextInput(todo, options = {}){
   resize();
   requestAnimationFrame(resize);
   return input;
+}
+
+function initCollapsibleCards(){
+  document.querySelectorAll(".card").forEach((card)=> {
+    if(card.dataset.collapsibleInitialized === "true") return;
+    const header = card.querySelector(".cardHeader");
+    const toggle = card.querySelector(".cardToggle");
+    const body = card.querySelector(".cardBody");
+    if(!header || !toggle || !body) return;
+    card.dataset.collapsibleInitialized = "true";
+    toggle.addEventListener("click", ()=> {
+      const collapsed = card.classList.toggle("is-collapsed");
+      toggle.textContent = collapsed ? "Expand" : "Collapse";
+      toggle.setAttribute("aria-expanded", String(!collapsed));
+    });
+  });
 }
 
 function getIcsProxyOrigin(){

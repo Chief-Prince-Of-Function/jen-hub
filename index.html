@@ -32,29 +32,34 @@
     <section class="grid">
       <div class="col">
         <section class="card card--weather">
-          <h2 class="cardTitle">Local weather:</h2>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Local weather:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
 
-          <div class="twoCol">
-            <!-- Weather settings -->
-            <div class="subCard">
-              <h3 class="subTitle">Weather location</h3>
+          <div class="cardBody">
+            <div class="twoCol">
+              <!-- Weather settings -->
+              <div class="subCard">
+                <h3 class="subTitle">Weather location</h3>
 
-              <div class="row2">
-                <input id="weatherLabel" class="input" placeholder="Home" />
-                <input id="weatherZip" class="input" placeholder="ZIP" inputmode="numeric" />
+                <div class="row2">
+                  <input id="weatherLabel" class="input" placeholder="Home" />
+                  <input id="weatherZip" class="input" placeholder="ZIP" inputmode="numeric" />
+                </div>
+
+                <div class="btnRow">
+                  <button id="btnWeatherRefresh" class="btn">Refresh weather</button>
+                  <span id="weatherStatus" class="pill muted">Idle</span>
+                </div>
               </div>
 
-              <div class="btnRow">
-                <button id="btnWeatherRefresh" class="btn">Refresh weather</button>
-                <span id="weatherStatus" class="pill muted">Idle</span>
-              </div>
-            </div>
-
-            <!-- Weather output -->
-            <div class="subCard">
-              <h3 class="subTitle">Weather</h3>
-              <div id="weatherOut" class="monoBox">
-                Not loaded yet.
+              <!-- Weather output -->
+              <div class="subCard">
+                <h3 class="subTitle">Weather</h3>
+                <div id="weatherOut" class="monoBox">
+                  Not loaded yet.
+                </div>
               </div>
             </div>
           </div>
@@ -62,104 +67,146 @@
 
         <!-- Left column: Home calendar -->
         <section class="card card--home-cal">
-          <h2 class="cardTitle">Home calendar:</h2>
-          <input id="homeCal" class="input homeCalUrl" placeholder="Home calendar auto-loaded" readonly />
-          <div id="homeCalPreview" class="embedBox">Home calendar auto-loaded.</div>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Home calendar:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
+          <div class="cardBody">
+            <input id="homeCal" class="input homeCalUrl" placeholder="Home calendar auto-loaded" readonly />
+            <div id="homeCalPreview" class="embedBox">Home calendar auto-loaded.</div>
+          </div>
         </section>
 
         <section class="card card--home-todo">
-          <h2 class="cardTitle">Home To Do List:</h2>
-
-          <div class="todoListHeader">
-            <select id="homeTodoListSelect" class="input select"></select>
-            <div class="todoListActions">
-              <button id="homeTodoListCreate" class="btn">Create list</button>
-              <button id="homeTodoListDelete" class="btn btnDanger">Delete list</button>
-            </div>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Home To Do List:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
           </div>
 
-          <div class="todoAdd">
-            <input id="homeTodoText" class="input todoAddText" placeholder="Add a task..." />
-            <div class="btnRow">
-              <button id="homeTodoAddBtn" class="btn">Add</button>
+          <div class="cardBody">
+            <div class="todoListHeader">
+              <select id="homeTodoListSelect" class="input select"></select>
+              <div class="todoListActions">
+                <button id="homeTodoListCreate" class="btn">Create list</button>
+                <button id="homeTodoListDelete" class="btn btnDanger">Delete list</button>
+              </div>
             </div>
-          </div>
 
-          <div id="homeTodoList" class="todoList"></div>
+            <div class="todoAdd">
+              <input id="homeTodoText" class="input todoAddText" placeholder="Add a task..." />
+              <div class="btnRow">
+                <button id="homeTodoAddBtn" class="btn">Add</button>
+              </div>
+            </div>
+
+            <div id="homeTodoList" class="todoList"></div>
+          </div>
         </section>
 
         <section class="card card--mantra">
-          <h2 class="cardTitle">Daily mantra:</h2>
-          <input id="mantra" class="input" placeholder="Type your mantra..." />
-          <p class="hint">This updates the message in the header.</p>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Daily mantra:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
+          <div class="cardBody">
+            <input id="mantra" class="input" placeholder="Type your mantra..." />
+            <p class="hint">This updates the message in the header.</p>
+          </div>
         </section>
 
         <!-- Left column: Verse -->
         <section class="card card--verse">
-          <h2 class="cardTitle">Bible Verse Of The Day:</h2>
-
-          <div class="btnRow">
-            <button id="btnVerseRefresh" class="btn">Refresh verse</button>
-            <span id="verseStatus" class="pill muted">Idle</span>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Bible Verse Of The Day:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
           </div>
 
-          <div id="verseOut" class="monoBox">
-            Not loaded yet.
-          </div>
+          <div class="cardBody">
+            <div class="btnRow">
+              <button id="btnVerseRefresh" class="btn">Refresh verse</button>
+              <span id="verseStatus" class="pill muted">Idle</span>
+            </div>
 
-          <p class="hint">
-            For now this is a placeholder. We’ll wire the real API later.
-          </p>
+            <div id="verseOut" class="monoBox">
+              Not loaded yet.
+            </div>
+
+            <p class="hint">
+              For now this is a placeholder. We’ll wire the real API later.
+            </p>
+          </div>
         </section>
       </div>
 
       <div class="col">
         <!-- Right column: Todos -->
         <section class="card card--todo">
-          <h2 class="cardTitle">Work To Do List:</h2>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Work To Do List:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
 
-          <div class="todoAdd">
-            <input id="todoText" class="input todoAddText" placeholder="Add a task..." />
-            <div class="todoAddControls">
-              <input id="todoDueDate" class="input" type="date" />
-              <select id="todoPriority" class="input select">
-                <option value="low">Priority: Low</option>
-                <option value="med" selected>Priority: Medium</option>
-                <option value="high">Priority: High</option>
-              </select>
-              <button id="todoAddBtn" class="btn">Add</button>
+          <div class="cardBody">
+            <div class="todoAdd">
+              <input id="todoText" class="input todoAddText" placeholder="Add a task..." />
+              <div class="todoAddControls">
+                <input id="todoDueDate" class="input" type="date" />
+                <select id="todoPriority" class="input select">
+                  <option value="low">Priority: Low</option>
+                  <option value="med" selected>Priority: Medium</option>
+                  <option value="high">Priority: High</option>
+                </select>
+                <button id="todoAddBtn" class="btn">Add</button>
+              </div>
             </div>
-          </div>
 
-          <div class="todoSortRow">
-            <label class="todoSortLabel" for="todoSort">Order:</label>
-            <select id="todoSort" class="input select todoSortSelect">
-              <option value="manual">Manual order</option>
-              <option value="priority">Priority order</option>
-            </select>
-          </div>
+            <div class="todoSortRow">
+              <label class="todoSortLabel" for="todoSort">Order:</label>
+              <select id="todoSort" class="input select todoSortSelect">
+                <option value="manual">Manual order</option>
+                <option value="priority">Priority order</option>
+              </select>
+              <label class="todoSortLabel" for="todoFilter">Filter:</label>
+              <select id="todoFilter" class="input select todoSortSelect">
+                <option value="high">High priority</option>
+                <option value="med">Medium priority</option>
+                <option value="low">Low priority</option>
+                <option value="all">All priorities</option>
+              </select>
+            </div>
 
-          <div id="todoList" class="todoList"></div>
+            <div id="todoList" class="todoList"></div>
 
-          <div class="btnRow mt">
-            <button id="btnSave" class="btn ghost">Save</button>
-            <button id="btnReset" class="btn ghost">Reset</button>
-            <span id="saveStatus" class="pill muted">Not saved</span>
+            <div class="btnRow mt">
+              <button id="btnSave" class="btn ghost">Save</button>
+              <button id="btnReset" class="btn ghost">Reset</button>
+              <span id="saveStatus" class="pill muted">Not saved</span>
+            </div>
           </div>
         </section>
 
         <section class="card card--work-notes">
-          <h2 class="cardTitle">Work notes:</h2>
-          <textarea id="workNotes" class="input notesArea" placeholder="Jot notes, meeting outcomes, reminders..."></textarea>
-          <p class="hint">Quick notes are saved automatically.</p>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Work notes:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
+          <div class="cardBody">
+            <textarea id="workNotes" class="input notesArea" placeholder="Jot notes, meeting outcomes, reminders..."></textarea>
+            <p class="hint">Quick notes are saved automatically.</p>
+          </div>
         </section>
 
         <!-- Right column: Work calendar -->
         <section class="card card--work-cal">
-          <h2 class="cardTitle">Work calendar:</h2>
-          <input id="workCal" class="input" placeholder="Paste an embed URL or .ics feed URL" />
-          <p class="hint">Public .ics feeds render upcoming events. If embed is blocked, it will show a link instead.</p>
-          <div id="workCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+          <div class="cardHeader">
+            <h2 class="cardTitle">Work calendar:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
+          <div class="cardBody">
+            <input id="workCal" class="input" placeholder="Paste an embed URL or .ics feed URL" />
+            <p class="hint">Public .ics feeds render upcoming events. If embed is blocked, it will show a link instead.</p>
+            <div id="workCalPreview" class="embedBox">Paste a calendar embed link above.</div>
+          </div>
         </section>
       </div>
     </section>
