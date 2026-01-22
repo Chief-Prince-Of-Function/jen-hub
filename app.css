@@ -256,6 +256,7 @@ body{
 
 .card--verse .monoBox{
   font-family: var(--body);
+  font-size: 15px;
 }
 
 .weatherBox{
