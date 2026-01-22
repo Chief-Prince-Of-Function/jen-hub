@@ -20,7 +20,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 8;
+const CURRENT_SCHEMA = 9;
 
 const el = (id)=> document.getElementById(id);
 
@@ -173,7 +173,7 @@ function render(){
     ? `${state.verse.lastText}\n\n— ${state.verse.lastRef || ""}\n\nCached: ${state.verse.cachedAt || ""}`
     : "Not loaded yet.";
 
-  weatherOut.textContent = state.weather.lastText || "Not loaded yet.";
+  renderWeather();
 
   todoSort.value = state.todos.workSort || "manual";
   todoFilter.value = state.todos.workFilter || "high";
@@ -220,6 +220,67 @@ function renderEmbed(url, host){
       Open calendar link
     </a>`;
   }
+}
+
+function renderWeather(){
+  const data = state.weather.lastData;
+  if(!data){
+    weatherOut.textContent = state.weather.lastText || "Not loaded yet.";
+    return;
+  }
+
+  const location = escapeHtml(data.locationName || "Local weather");
+  const zip = data.zip ? ` <span class="mutedSmall">(${escapeHtml(data.zip)})</span>` : "";
+  const description = escapeHtml(data.description || "Weather unavailable");
+  const icon = data.icon?.symbol || "🌤️";
+  const currentTemp = escapeHtml(data.currentTemp || "—");
+  const feelsLike = data.feelsLike ? `Feels like ${escapeHtml(data.feelsLike)}` : "Feels like —";
+  const high = escapeHtml(data.high || "—");
+  const low = escapeHtml(data.low || "—");
+  const updatedAt = escapeHtml(data.updatedAt || "");
+  const linkUrl = data.linkUrl || "";
+
+  const linkMarkup = linkUrl
+    ? `<a class="weatherLink" href="${linkUrl}" target="_blank" rel="noopener">Open-Meteo forecast ↗</a>`
+    : "";
+
+  weatherOut.innerHTML = `
+    <div class="weatherPanel">
+      <div class="weatherHeader">
+        <div class="weatherIcon" aria-hidden="true">${icon}</div>
+        <div class="weatherSummary">
+          <div class="weatherLocation">${location}${zip}</div>
+          <div class="weatherDescription">${description}</div>
+        </div>
+      </div>
+      <div class="weatherMetrics">
+        <div class="weatherMetric">
+          <div class="metricRow"><span class="metricIcon">🌡️</span>Now</div>
+          <div class="metricValue">${currentTemp}</div>
+          <div class="metricSub">${feelsLike}</div>
+        </div>
+        <div class="weatherMetric">
+          <div class="metricRow"><span class="metricIcon">🔆</span>High</div>
+          <div class="metricValue">${high}</div>
+          <div class="metricSub">Today&#39;s high</div>
+        </div>
+        <div class="weatherMetric">
+          <div class="metricRow"><span class="metricIcon">🌙</span>Low</div>
+          <div class="metricValue">${low}</div>
+          <div class="metricSub">Tonight&#39;s low</div>
+        </div>
+        <div class="weatherMetric">
+          <div class="metricRow"><span class="metricIcon">🛰️</span>Status</div>
+          <div class="metricValue">${description}</div>
+          <div class="metricSub">Condition summary</div>
+        </div>
+      </div>
+      <div class="weatherFooter">
+        <div class="weatherUpdated">Updated: ${updatedAt}</div>
+        ${linkMarkup}
+      </div>
+    </div>
+  `;
 }
 
 function looksLikeIcs(url){
@@ -700,7 +761,8 @@ btnWeatherRefresh.addEventListener("click", async ()=>{
 
   try{
     const weather = await fetchWeather();
-    state.weather.lastText = weather;
+    state.weather.lastText = weather.text;
+    state.weather.lastData = weather.data;
     weatherStatus.textContent = "OK";
     weatherStatus.classList.add("muted");
   }catch(err){
@@ -1020,6 +1082,11 @@ function migrateState(baseState){
     stateToMigrate.todos.workFilter = stateToMigrate.todos.workFilter || "high";
   }
 
+  if(schema < 9){
+    stateToMigrate.weather = stateToMigrate.weather || {};
+    stateToMigrate.weather.lastData = stateToMigrate.weather.lastData || null;
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -1033,7 +1100,7 @@ function defaultState(){
   }));
   return {
     meta: { createdAt: now, updatedAt: now, schema: CURRENT_SCHEMA },
-    weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"" },
+    weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"", lastData: null },
     calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
     todos: {
@@ -1288,12 +1355,20 @@ async function fetchWeather(){
 
   const current = data.current || {};
   const daily = data.daily || {};
-  const description = describeWeatherCode(current.weather_code ?? daily.weather_code?.[0]);
+  const weatherCode = current.weather_code ?? daily.weather_code?.[0];
+  const description = describeWeatherCode(weatherCode);
+  const icon = getWeatherIcon(weatherCode);
 
   const currentTemp = formatTemp(current.temperature_2m);
   const feelsLike = formatTemp(current.apparent_temperature);
   const high = formatTemp(daily.temperature_2m_max?.[0]);
   const low = formatTemp(daily.temperature_2m_min?.[0]);
+  const updatedAt = new Date().toLocaleString();
+
+  const linkUrl = new URL("https://open-meteo.com/en");
+  linkUrl.searchParams.set("latitude", location.lat);
+  linkUrl.searchParams.set("longitude", location.lon);
+  linkUrl.searchParams.set("timezone", "auto");
 
   const lines = [
     `Weather for ${location.name || label}${zip ? ` (${zip})` : ""}`,
@@ -1301,9 +1376,24 @@ async function fetchWeather(){
     `${description}`,
     `Now: ${currentTemp}${feelsLike ? ` (feels like ${feelsLike})` : ""}`,
     `High: ${high} · Low: ${low}`,
-    `Updated: ${new Date().toLocaleString()}`
+    `Updated: ${updatedAt}`
   ];
-  return lines.join("\n");
+
+  return {
+    text: lines.join("\n"),
+    data: {
+      locationName: location.name || label,
+      zip,
+      description,
+      currentTemp,
+      feelsLike,
+      high,
+      low,
+      updatedAt,
+      icon,
+      linkUrl: linkUrl.toString(),
+    },
+  };
 }
 
 function formatTemp(value){
@@ -1344,4 +1434,21 @@ function describeWeatherCode(code){
   };
   if(code === undefined || code === null) return "Weather unavailable";
   return table[code] || "Weather unavailable";
+}
+
+function getWeatherIcon(code){
+  if(code === undefined || code === null){
+    return { symbol: "❔", label: "Unknown" };
+  }
+  if(code === 0) return { symbol: "☀️", label: "Clear" };
+  if(code <= 2) return { symbol: "🌤️", label: "Mostly clear" };
+  if(code === 3) return { symbol: "☁️", label: "Overcast" };
+  if(code === 45 || code === 48) return { symbol: "🌫️", label: "Fog" };
+  if(code >= 51 && code <= 57) return { symbol: "🌦️", label: "Drizzle" };
+  if(code >= 61 && code <= 67) return { symbol: "🌧️", label: "Rain" };
+  if(code >= 71 && code <= 77) return { symbol: "❄️", label: "Snow" };
+  if(code >= 80 && code <= 82) return { symbol: "🌧️", label: "Showers" };
+  if(code >= 85 && code <= 86) return { symbol: "🌨️", label: "Snow showers" };
+  if(code >= 95) return { symbol: "⛈️", label: "Thunderstorm" };
+  return { symbol: "🌥️", label: "Cloudy" };
 }
