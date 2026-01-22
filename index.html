@@ -31,6 +31,25 @@
     <!-- Grid -->
     <section class="grid">
       <div class="col">
+        <!-- Left column: Verse -->
+        <section class="card card--verse">
+          <div class="cardHeader">
+            <h2 class="cardTitle">Bible Verse Of The Day:</h2>
+            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
+
+          <div class="cardBody">
+            <div class="btnRow">
+              <button id="btnVerseRefresh" class="btn">Refresh verse</button>
+              <span id="verseStatus" class="pill muted">Idle</span>
+            </div>
+
+            <div id="verseOut" class="monoBox">
+              Not loaded yet.
+            </div>
+          </div>
+        </section>
+
         <section class="card card--weather">
           <div class="cardHeader">
             <h2 class="cardTitle">Local Weather:</h2>
@@ -38,7 +57,7 @@
           </div>
 
           <div class="cardBody">
-            <div class="twoCol">
+            <div class="weatherStack">
               <!-- Weather settings -->
               <div class="subCard">
                 <h3 class="subTitle">Weather location</h3>
@@ -110,25 +129,6 @@
           </div>
           <div class="cardBody">
             <input id="mantra" class="input" placeholder="Type your mantra..." />
-          </div>
-        </section>
-
-        <!-- Left column: Verse -->
-        <section class="card card--verse">
-          <div class="cardHeader">
-            <h2 class="cardTitle">Bible Verse Of The Day:</h2>
-            <button class="btn btnSmall cardToggle" type="button" aria-expanded="true">Collapse</button>
-          </div>
-
-          <div class="cardBody">
-            <div class="btnRow">
-              <button id="btnVerseRefresh" class="btn">Refresh verse</button>
-              <span id="verseStatus" class="pill muted">Idle</span>
-            </div>
-
-            <div id="verseOut" class="monoBox">
-              Not loaded yet.
-            </div>
           </div>
         </section>
       </div>
