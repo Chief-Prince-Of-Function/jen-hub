@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Havana&family=Lobster&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Parisienne&display=swap");
 
 :root{
   --bg:#ffffff;
@@ -15,8 +15,8 @@
   --card-shadow: 0 12px 30px rgba(106,61,168,.12);
   --radius: 20px;
 
-  --script: "Lobster", "Brush Script MT", cursive;
-  --body: "Havana", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --script: "Parisienne", "Brush Script MT", cursive;
+  --body: "Cormorant Garamond", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 *{ box-sizing:border-box; }
