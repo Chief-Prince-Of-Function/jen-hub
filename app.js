@@ -230,7 +230,8 @@ function renderWeather(){
   }
 
   const location = escapeHtml(data.locationName || "Local weather");
-  const zip = data.zip ? ` <span class="mutedSmall">(${escapeHtml(data.zip)})</span>` : "";
+  const zipValue = (state.weather.zip || data.zip || "").trim();
+  const zip = zipValue ? ` <span class="mutedSmall">(${escapeHtml(zipValue)})</span>` : "";
   const description = escapeHtml(data.description || "Weather unavailable");
   const icon = data.icon?.symbol || "🌤️";
   const currentTemp = escapeHtml(data.currentTemp || "—");
@@ -238,11 +239,11 @@ function renderWeather(){
   const high = escapeHtml(data.high || "—");
   const low = escapeHtml(data.low || "—");
   const updatedAt = escapeHtml(data.updatedAt || "");
-  const linkUrl = data.linkUrl || "";
+  const linkUrl = zipValue
+    ? `https://weather.com/weather/today/l/${encodeURIComponent(zipValue)}`
+    : "https://weather.com/";
 
-  const linkMarkup = linkUrl
-    ? `<a class="weatherLink" href="${linkUrl}" target="_blank" rel="noopener">Weather.com ↗</a>`
-    : "";
+  const linkMarkup = `<a class="weatherLink" href="${linkUrl}" target="_blank" rel="noopener">Weather.com ↗</a>`;
 
   weatherOut.innerHTML = `
     <div class="weatherPanel">
