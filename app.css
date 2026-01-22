@@ -342,10 +342,9 @@ body{
 
 .todoSortRow{
   display:flex;
-  align-items:center;
-  gap:10px;
+  align-items:flex-end;
+  gap:16px;
   margin-bottom: 12px;
-  flex-wrap: wrap;
 }
 
 .todoSortLabel{
@@ -353,8 +352,16 @@ body{
   color: var(--card-ink-soft);
 }
 
+.todoSortGroup{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .todoSortSelect{
-  min-width: 200px;
+  width: 100%;
 }
 
 .todoItem{
