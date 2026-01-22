@@ -112,11 +112,31 @@ body{
   align-self: stretch;
 }
 
+.cardHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
+
 .cardTitle{
-  margin:0 0 10px 0;
+  margin:0;
   font-family: var(--script);
   font-size: 22px;
   font-weight: 400;
+}
+
+.cardBody{
+  margin-top: 10px;
+}
+
+.cardToggle{
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.card.is-collapsed .cardBody{
+  display: none;
 }
 
 .subCard{
