@@ -177,6 +177,10 @@ body{
   flex-wrap: wrap;
 }
 
+.card--verse .btnRow{
+  margin-bottom: 10px;
+}
+
 .btn{
   padding: 9px 12px;
   border-radius: 999px;
