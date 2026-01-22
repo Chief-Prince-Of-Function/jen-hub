@@ -161,6 +161,12 @@ body{
   gap: 12px;
 }
 
+.weatherStack{
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+}
+
 .row2{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -246,6 +252,10 @@ body{
   font-size: 13px;
   color: var(--card-ink-soft);
   overflow:auto;
+}
+
+.card--verse .monoBox{
+  font-family: var(--body);
 }
 
 .weatherBox{
