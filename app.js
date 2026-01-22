@@ -241,7 +241,7 @@ function renderWeather(){
   const linkUrl = data.linkUrl || "";
 
   const linkMarkup = linkUrl
-    ? `<a class="weatherLink" href="${linkUrl}" target="_blank" rel="noopener">Open-Meteo forecast ↗</a>`
+    ? `<a class="weatherLink" href="${linkUrl}" target="_blank" rel="noopener">Weather.com ↗</a>`
     : "";
 
   weatherOut.innerHTML = `
@@ -260,6 +260,11 @@ function renderWeather(){
           <div class="metricSub">${feelsLike}</div>
         </div>
         <div class="weatherMetric">
+          <div class="metricRow"><span class="metricIcon">🛰️</span>Status</div>
+          <div class="metricValue">${description}</div>
+          <div class="metricSub">Condition summary</div>
+        </div>
+        <div class="weatherMetric">
           <div class="metricRow"><span class="metricIcon">🔆</span>High</div>
           <div class="metricValue">${high}</div>
           <div class="metricSub">Today&#39;s high</div>
@@ -268,11 +273,6 @@ function renderWeather(){
           <div class="metricRow"><span class="metricIcon">🌙</span>Low</div>
           <div class="metricValue">${low}</div>
           <div class="metricSub">Tonight&#39;s low</div>
-        </div>
-        <div class="weatherMetric">
-          <div class="metricRow"><span class="metricIcon">🛰️</span>Status</div>
-          <div class="metricValue">${description}</div>
-          <div class="metricSub">Condition summary</div>
         </div>
       </div>
       <div class="weatherFooter">
@@ -1365,10 +1365,9 @@ async function fetchWeather(){
   const low = formatTemp(daily.temperature_2m_min?.[0]);
   const updatedAt = new Date().toLocaleString();
 
-  const linkUrl = new URL("https://open-meteo.com/en");
-  linkUrl.searchParams.set("latitude", location.lat);
-  linkUrl.searchParams.set("longitude", location.lon);
-  linkUrl.searchParams.set("timezone", "auto");
+  const linkUrl = zip
+    ? new URL(`https://weather.com/weather/today/l/${encodeURIComponent(zip)}`)
+    : new URL("https://weather.com/");
 
   const lines = [
     `Weather for ${location.name || label}${zip ? ` (${zip})` : ""}`,
