@@ -286,6 +286,11 @@ body{
   gap:10px;
 }
 
+.notesArea{
+  min-height: 140px;
+  resize: vertical;
+}
+
 .todoListHeader{
   display:flex;
   align-items:center;
