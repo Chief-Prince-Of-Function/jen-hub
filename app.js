@@ -13,6 +13,7 @@ const DEFAULT_ICS_PROXY_ORIGIN = "https://jen-hub.fusco13pi.workers.dev";
 const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
 const DAILY_QUOTE_API_URL = "https://type.fit/api/quotes";
 const DAILY_QUOTE_PROXY_URL = "https://api.allorigins.win/raw?url=";
+const DEFAULT_WORK_CAL_URL = "https://outlook.office365.com/owa/calendar/a4c348f42482496c8c7fe1da5bf37c5e@nichir.onmicrosoft.com/Calendar/calendar.ics";
 const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/c386f1c4-cb7d-4e9f-9f4b-b875e2503578/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/64ed9ef6-f0a6-490c-8923-3b753f2ac638/icalendar/feed/feed.ics",
@@ -20,7 +21,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 9;
+const CURRENT_SCHEMA = 10;
 
 const el = (id)=> document.getElementById(id);
 
@@ -91,7 +92,6 @@ const verseOut = el("verseOut");
 const mantra = el("mantra");
 const mantraBig = el("mantraBig");
 
-const workCal = el("workCal");
 const workCalPreview = el("workCalPreview");
 
 const homeCal = el("homeCal");
@@ -163,10 +163,9 @@ function render(){
   mantra.value = state.notes.mantra || "";
   mantraBig.textContent = (state.notes.mantra || "Live And Not Just Survive").trim() || "Live And Not Just Survive";
 
-  workCal.value = state.calendars.workEmbedUrl || "";
   homeCal.value = (state.calendars.homeEmbedUrls || []).join("\n");
 
-  renderEmbed(workCal.value, workCalPreview);
+  renderWorkCalendar(state.calendars.workEmbedUrl, workCalPreview);
   renderHomeCalendar(state.calendars.homeEmbedUrls, homeCalPreview);
 
   verseOut.textContent = state.verse.lastText
@@ -220,6 +219,15 @@ function renderEmbed(url, host){
       Open calendar link
     </a>`;
   }
+}
+
+function renderWorkCalendar(url, host){
+  const cleanUrl = (url || "").trim();
+  if(!cleanUrl){
+    host.innerHTML = "Work calendar not configured.";
+    return;
+  }
+  renderIcsCalendar(cleanUrl, host);
 }
 
 function renderWeather(){
@@ -350,9 +358,14 @@ async function fetchMultipleIcsTexts(urls){
 
 async function fetchIcsText(url){
   const proxyUrl = `${ICS_PROXY_URL}${encodeURIComponent(url)}`;
-  const result = await tryFetchText(proxyUrl);
-  if(result.ok) return result.text;
-  throw new Error(result.error || "Unable to load calendar feed.");
+  const proxyResult = await tryFetchText(proxyUrl);
+  if(proxyResult.ok) return proxyResult.text;
+
+  const fallbackUrl = `${DAILY_QUOTE_PROXY_URL}${encodeURIComponent(url)}`;
+  const fallbackResult = await tryFetchText(fallbackUrl);
+  if(fallbackResult.ok) return fallbackResult.text;
+
+  throw new Error(proxyResult.error || fallbackResult.error || "Unable to load calendar feed.");
 }
 
 async function tryFetchText(url){
@@ -681,12 +694,6 @@ mantra.addEventListener("input", ()=>{
 
 workNotes.addEventListener("input", ()=>{
   state.notes.workNotes = workNotes.value;
-  autoSave();
-});
-
-workCal.addEventListener("input", ()=>{
-  state.calendars.workEmbedUrl = workCal.value.trim();
-  renderEmbed(workCal.value, workCalPreview);
   autoSave();
 });
 
@@ -1088,6 +1095,13 @@ function migrateState(baseState){
     stateToMigrate.weather.lastData = stateToMigrate.weather.lastData || null;
   }
 
+  if(schema < 10){
+    stateToMigrate.calendars = stateToMigrate.calendars || {};
+    if(!stateToMigrate.calendars.workEmbedUrl){
+      stateToMigrate.calendars.workEmbedUrl = DEFAULT_WORK_CAL_URL;
+    }
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -1102,7 +1116,7 @@ function defaultState(){
   return {
     meta: { createdAt: now, updatedAt: now, schema: CURRENT_SCHEMA },
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"", lastData: null },
-    calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
+    calendars: { workEmbedUrl: DEFAULT_WORK_CAL_URL, homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
     todos: {
       work: [],
