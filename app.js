@@ -11,6 +11,8 @@ const SECRET_KEY  = "jen_hub_secret_v1";
 const ICS_PROXY_ORIGIN_KEY = "sister_hub_ics_proxy_origin";
 const DEFAULT_ICS_PROXY_ORIGIN = "https://jen-hub.fusco13pi.workers.dev";
 const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
+const DAILY_QUOTE_API_URL = "https://type.fit/api/quotes";
+const DAILY_QUOTE_PROXY_URL = "https://api.allorigins.win/raw?url=";
 const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/c386f1c4-cb7d-4e9f-9f4b-b875e2503578/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/64ed9ef6-f0a6-490c-8923-3b753f2ac638/icalendar/feed/feed.ics",
@@ -18,7 +20,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 6;
+const CURRENT_SCHEMA = 7;
 
 const el = (id)=> document.getElementById(id);
 
@@ -134,6 +136,7 @@ let state = defaultState();
     setSaveStatus("Loaded ⚠️ (local) — " + (err?.message || err));
   }
   render();
+  refreshDailyMantraQuote();
 })();
 
 /* =========================
@@ -146,6 +149,7 @@ function tick(){
 }
 tick();
 setInterval(tick, 1000);
+setInterval(()=> refreshDailyMantraQuote(), 1000 * 60 * 60);
 
 /* =========================
    Render
@@ -989,6 +993,15 @@ function migrateState(baseState){
     stateToMigrate.notes.workNotes = stateToMigrate.notes.workNotes || "";
   }
 
+  if(schema < 7){
+    stateToMigrate.notes = stateToMigrate.notes || {};
+    stateToMigrate.notes.mantra = stateToMigrate.notes.mantra || "Live And Not Just Survive";
+    stateToMigrate.notes.workNotes = stateToMigrate.notes.workNotes || "";
+    stateToMigrate.notes.mantraLastFetched = stateToMigrate.notes.mantraLastFetched || "";
+    stateToMigrate.notes.mantraLastQuote = stateToMigrate.notes.mantraLastQuote || "";
+    stateToMigrate.notes.mantraLastAuthor = stateToMigrate.notes.mantraLastAuthor || "";
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -1006,7 +1019,13 @@ function defaultState(){
     calendars: { workEmbedUrl:"", homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
     verse: { lastText:"", lastRef:"", cachedAt:"" },
     todos: { work: [], workSort: "manual", home: { lists: homeLists, selectedListId: homeLists[0]?.id || "" } },
-    notes: { mantra: "Live And Not Just Survive", workNotes: "" }
+    notes: {
+      mantra: "Live And Not Just Survive",
+      workNotes: "",
+      mantraLastFetched: "",
+      mantraLastQuote: "",
+      mantraLastAuthor: "",
+    }
   };
 }
 
@@ -1100,6 +1119,59 @@ function getIcsProxyOrigin(){
 
 function stripTrailingSlash(value){
   return value.endsWith("/") ? value.slice(0, -1) : value;
+}
+
+function getLocalDateKey(date = new Date()){
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+async function fetchDailyQuote(){
+  const quoteUrl = `${DAILY_QUOTE_PROXY_URL}${encodeURIComponent(DAILY_QUOTE_API_URL)}`;
+  const res = await fetch(quoteUrl, { cache: "no-store" });
+  if(!res.ok){
+    throw new Error("Quote service unavailable.");
+  }
+  const data = await res.json();
+  if(!Array.isArray(data) || !data.length){
+    throw new Error("Unexpected quote response.");
+  }
+
+  const todayKey = getLocalDateKey();
+  const dateSeed = Number(todayKey.replaceAll("-", "")) || Date.now();
+  const index = dateSeed % data.length;
+  const entry = data[index] || {};
+  const content = String(entry?.text || "").trim();
+  const author = String(entry?.author || "").trim();
+
+  if(!content){
+    throw new Error("Unexpected quote response.");
+  }
+
+  const text = author ? `“${content}” — ${author}` : `“${content}”`;
+  return { text, content, author };
+}
+
+async function refreshDailyMantraQuote(){
+  const todayKey = getLocalDateKey();
+  if(state.notes?.mantraLastFetched === todayKey){
+    return;
+  }
+
+  try{
+    const quote = await fetchDailyQuote();
+    state.notes = state.notes || {};
+    state.notes.mantra = quote.text;
+    state.notes.mantraLastFetched = todayKey;
+    state.notes.mantraLastQuote = quote.content;
+    state.notes.mantraLastAuthor = quote.author;
+    autoSave();
+    render();
+  }catch(err){
+    console.warn("Daily quote fetch failed.", err);
+  }
 }
 
 async function fetchVerseOfDay(){
