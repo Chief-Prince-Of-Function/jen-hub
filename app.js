@@ -12,6 +12,7 @@ const ICS_PROXY_ORIGIN_KEY = "sister_hub_ics_proxy_origin";
 const DEFAULT_ICS_PROXY_ORIGIN = "https://jen-hub.fusco13pi.workers.dev";
 const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
 const DAILY_QUOTE_API_URL = "https://type.fit/api/quotes";
+const DAILY_QUOTE_PROXY_URL = "https://api.allorigins.win/raw?url=";
 const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/c386f1c4-cb7d-4e9f-9f4b-b875e2503578/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/64ed9ef6-f0a6-490c-8923-3b753f2ac638/icalendar/feed/feed.ics",
@@ -1128,7 +1129,8 @@ function getLocalDateKey(date = new Date()){
 }
 
 async function fetchDailyQuote(){
-  const res = await fetch(DAILY_QUOTE_API_URL, { cache: "no-store" });
+  const quoteUrl = `${DAILY_QUOTE_PROXY_URL}${encodeURIComponent(DAILY_QUOTE_API_URL)}`;
+  const res = await fetch(quoteUrl, { cache: "no-store" });
   if(!res.ok){
     throw new Error("Quote service unavailable.");
   }
