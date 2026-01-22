@@ -661,18 +661,21 @@ btnReset.addEventListener("click", ()=>{
 });
 
 btnVerseRefresh.addEventListener("click", async ()=>{
-  // Placeholder until we wire a real verse API
   verseStatus.textContent = "Loading…";
   verseStatus.classList.remove("muted");
 
-  await sleep(500);
+  try{
+    const verse = await fetchVerseOfDay();
+    state.verse.lastText = verse.text;
+    state.verse.lastRef = verse.reference;
+    state.verse.cachedAt = new Date().toLocaleString();
 
-  state.verse.lastText = "“Be strong and courageous. Do not be afraid...”";
-  state.verse.lastRef = "Joshua 1:9";
-  state.verse.cachedAt = new Date().toLocaleString();
-
-  verseStatus.textContent = "OK";
-  verseStatus.classList.add("muted");
+    verseStatus.textContent = "OK";
+    verseStatus.classList.add("muted");
+  }catch(err){
+    verseStatus.textContent = `Error: ${err?.message || err}`;
+    verseStatus.classList.remove("muted");
+  }
 
   autoSave();
   render();
@@ -1097,6 +1100,27 @@ function getIcsProxyOrigin(){
 
 function stripTrailingSlash(value){
   return value.endsWith("/") ? value.slice(0, -1) : value;
+}
+
+async function fetchVerseOfDay(){
+  const verseUrl = "https://beta.ourmanna.com/api/v1/get/?format=json";
+  const res = await fetch(verseUrl);
+  if(!res.ok){
+    throw new Error("Verse service unavailable.");
+  }
+  const data = await res.json();
+  const text = (data?.verse?.details?.text || "").trim();
+  const reference = (data?.verse?.details?.reference || "").trim();
+  const version = (data?.verse?.details?.version || "").trim();
+
+  if(!text || !reference){
+    throw new Error("Unexpected verse response.");
+  }
+
+  return {
+    text: `“${text}”`,
+    reference: version ? `${reference} (${version})` : reference,
+  };
 }
 
 async function fetchWeather(){
