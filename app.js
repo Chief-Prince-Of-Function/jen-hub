@@ -499,7 +499,11 @@ function todoRow(t, options = {}){
   check.className = "todoCheck";
   check.checked = !!t.done;
   check.addEventListener("change", ()=>{
-    t.done = check.checked;
+    if(check.checked){
+      deleteTodo(t.id);
+      return;
+    }
+    t.done = false;
     autoSave();
     render();
   });
@@ -603,7 +607,11 @@ function homeTodoRow(t, options = {}){
   check.className = "todoCheck";
   check.checked = !!t.done;
   check.addEventListener("change", ()=> {
-    t.done = check.checked;
+    if(check.checked){
+      deleteHomeTodo(t.id);
+      return;
+    }
+    t.done = false;
     autoSave();
     render();
   });
