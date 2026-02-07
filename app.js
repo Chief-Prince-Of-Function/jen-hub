@@ -21,7 +21,7 @@ const DEFAULT_HOME_CAL_URLS = [
   "https://rest.cozi.com/api/ext/1103/404bc8c0-b4f3-4ca8-8653-9f9ddece9a68/icalendar/feed/feed.ics",
   "https://rest.cozi.com/api/ext/1103/a5f61ad0-bda3-451a-b85b-17c03a03ca1a/icalendar/feed/feed.ics",
 ];
-const CURRENT_SCHEMA = 10;
+const CURRENT_SCHEMA = 11;
 
 const el = (id)=> document.getElementById(id);
 
@@ -138,6 +138,7 @@ let state = defaultState();
   }
   render();
   refreshDailyMantraQuote();
+  refreshDailyVerse();
   initCollapsibleCards();
 })();
 
@@ -152,6 +153,7 @@ function tick(){
 tick();
 setInterval(tick, 1000);
 setInterval(()=> refreshDailyMantraQuote(), 1000 * 60 * 60);
+setInterval(()=> refreshDailyVerse(), 1000 * 60 * 60);
 
 /* =========================
    Render
@@ -751,24 +753,7 @@ btnReset.addEventListener("click", ()=>{
 });
 
 btnVerseRefresh.addEventListener("click", async ()=>{
-  verseStatus.textContent = "Loading…";
-  verseStatus.classList.remove("muted");
-
-  try{
-    const verse = await fetchVerseOfDay();
-    state.verse.lastText = verse.text;
-    state.verse.lastRef = verse.reference;
-    state.verse.cachedAt = new Date().toLocaleString();
-
-    verseStatus.textContent = "OK";
-    verseStatus.classList.add("muted");
-  }catch(err){
-    verseStatus.textContent = `Error: ${err?.message || err}`;
-    verseStatus.classList.remove("muted");
-  }
-
-  autoSave();
-  render();
+  await refreshVerse({ force: true });
 });
 
 btnWeatherRefresh.addEventListener("click", async ()=>{
@@ -1110,6 +1095,14 @@ function migrateState(baseState){
     }
   }
 
+  if(schema < 11){
+    stateToMigrate.verse = stateToMigrate.verse || {};
+    stateToMigrate.verse.lastText = stateToMigrate.verse.lastText || "";
+    stateToMigrate.verse.lastRef = stateToMigrate.verse.lastRef || "";
+    stateToMigrate.verse.cachedAt = stateToMigrate.verse.cachedAt || "";
+    stateToMigrate.verse.lastFetched = stateToMigrate.verse.lastFetched || "";
+  }
+
   stateToMigrate.meta = { ...meta, schema: CURRENT_SCHEMA };
   return stateToMigrate;
 }
@@ -1125,7 +1118,7 @@ function defaultState(){
     meta: { createdAt: now, updatedAt: now, schema: CURRENT_SCHEMA },
     weather: { locationLabel: "Home", zip:"", lat:"", lon:"", lastText:"", lastData: null },
     calendars: { workEmbedUrl: DEFAULT_WORK_CAL_URL, homeEmbedUrls: [...DEFAULT_HOME_CAL_URLS] },
-    verse: { lastText:"", lastRef:"", cachedAt:"" },
+    verse: { lastText:"", lastRef:"", cachedAt:"", lastFetched:"" },
     todos: {
       work: [],
       workSort: "manual",
@@ -1307,6 +1300,48 @@ async function refreshDailyMantraQuote(){
   }catch(err){
     console.warn("Daily quote fetch failed.", err);
   }
+}
+
+async function refreshDailyVerse(){
+  const todayKey = getLocalDateKey();
+  if(state.verse?.lastFetched === todayKey){
+    return;
+  }
+
+  await refreshVerse({ force: true, silent: true });
+}
+
+async function refreshVerse({ force = false, silent = false } = {}){
+  const todayKey = getLocalDateKey();
+  if(!force && state.verse?.lastFetched === todayKey){
+    return;
+  }
+
+  if(!silent){
+    verseStatus.textContent = "Loading…";
+    verseStatus.classList.remove("muted");
+  }
+
+  try{
+    const verse = await fetchVerseOfDay();
+    state.verse.lastText = verse.text;
+    state.verse.lastRef = verse.reference;
+    state.verse.cachedAt = new Date().toLocaleString();
+    state.verse.lastFetched = todayKey;
+
+    if(!silent){
+      verseStatus.textContent = "OK";
+      verseStatus.classList.add("muted");
+    }
+  }catch(err){
+    if(!silent){
+      verseStatus.textContent = `Error: ${err?.message || err}`;
+      verseStatus.classList.remove("muted");
+    }
+  }
+
+  autoSave();
+  render();
 }
 
 async function fetchVerseOfDay(){
