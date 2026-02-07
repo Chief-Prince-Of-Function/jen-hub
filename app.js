@@ -11,7 +11,7 @@ const SECRET_KEY  = "jen_hub_secret_v1";
 const ICS_PROXY_ORIGIN_KEY = "sister_hub_ics_proxy_origin";
 const DEFAULT_ICS_PROXY_ORIGIN = "https://jen-hub.fusco13pi.workers.dev";
 const ICS_PROXY_URL = `${getIcsProxyOrigin()}/ics?url=`;
-const DAILY_QUOTE_API_URL = "https://type.fit/api/quotes";
+const DAILY_QUOTE_API_URL = "https://api.quotable.io/quotes?limit=365";
 const DAILY_QUOTE_PROXY_URL = "https://api.allorigins.win/raw?url=";
 const DEFAULT_WORK_CAL_URL = "https://outlook.office365.com/owa/calendar/a4c348f42482496c8c7fe1da5bf37c5e@nichir.onmicrosoft.com/Calendar/calendar.ics";
 const DEFAULT_HOME_CAL_URLS = [
@@ -1249,6 +1249,12 @@ function getLocalDateKey(date = new Date()){
   return `${year}-${month}-${day}`;
 }
 
+function getDayOfYear(date = new Date()){
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
 async function fetchDailyQuote(){
   const quoteUrl = `${DAILY_QUOTE_PROXY_URL}${encodeURIComponent(DAILY_QUOTE_API_URL)}`;
   const res = await fetch(quoteUrl, { cache: "no-store" });
@@ -1256,15 +1262,15 @@ async function fetchDailyQuote(){
     throw new Error("Quote service unavailable.");
   }
   const data = await res.json();
-  if(!Array.isArray(data) || !data.length){
+  const results = Array.isArray(data?.results) ? data.results : [];
+  if(!results.length){
     throw new Error("Unexpected quote response.");
   }
 
-  const todayKey = getLocalDateKey();
-  const dateSeed = Number(todayKey.replaceAll("-", "")) || Date.now();
-  const index = dateSeed % data.length;
-  const entry = data[index] || {};
-  const content = String(entry?.text || "").trim();
+  const dayIndex = Math.max(getDayOfYear() - 1, 0);
+  const index = dayIndex % results.length;
+  const entry = results[index] || {};
+  const content = String(entry?.content || "").trim();
   const author = String(entry?.author || "").trim();
 
   if(!content){
